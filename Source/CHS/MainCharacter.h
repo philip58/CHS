@@ -1,0 +1,68 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/Character.h"
+#include "MainCharacter.generated.h"
+
+UCLASS()
+class CHS_API AMainCharacter : public ACharacter
+{
+	GENERATED_BODY()
+
+public:
+	/* --- Methods--- */
+	// Sets default values for this character's properties
+	AMainCharacter();
+
+	/* --- Variables--- */
+
+
+protected:
+	// Called when the game starts or when spawned
+	virtual void BeginPlay() override;
+
+public:	
+	/* --- Methods--- */ 
+	// Called every frame
+	virtual void Tick(float deltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* playerInputComponent) override;
+
+	// Player move forward
+	void WalkForward(float input);
+
+	// Player move backwards
+	void WalkBackwards(float input);
+
+	// Player move left
+	void WalkLeft(float input);
+
+	// Player move right
+	void WalkRight(float input);
+
+	// Player jump
+	void PlayerJump();
+
+	// Player look horizontally
+	void LookHorizontally(float input);
+
+	// Player look horizontally
+	void LookVertically(float input);
+	
+	/* --- Variables--- */ 
+	// Player mesh component
+	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh")
+	UStaticMeshComponent* playerMesh;
+
+private:
+	/* --- Methods--- */
+
+	/* --- Variables--- */
+	// Player camera (viewport)
+	UPROPERTY(EditAnywhere, Category = "Player Camera")
+	UCameraComponent* playerCamera;
+};
