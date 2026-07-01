@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
+#include "MainGameModeBase.h"
 #include "MainCharacter.generated.h"
 
 UCLASS()
@@ -52,17 +53,37 @@ public:
 
 	// Player look horizontally
 	void LookVertically(float input);
+
+	// Start player sprinting
+	void StartSprinting();
+
+	// Stop player sprinting
+	void StopSprinting();
 	
 	/* --- Variables--- */ 
 	// Player mesh component
-	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh")
+	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh Properties")
 	UStaticMeshComponent* playerMesh;
+
+	// Player sprint speed
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float sprintSpeed = 400;
+
+	// Player walk speed
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float walkSpeed = 200;
 
 private:
 	/* --- Methods--- */
 
 	/* --- Variables--- */
 	// Player camera (viewport)
-	UPROPERTY(EditAnywhere, Category = "Player Camera")
+	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
 	UCameraComponent* playerCamera;
+
+	// Is the player sprinting
+	bool bIsPlayerSprinting = false;
+
+	// Gamemode base
+	TObjectPtr<AMainGameModeBase> gameModeBase;
 };
