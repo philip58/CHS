@@ -59,6 +59,9 @@ public:
 
 	// Stop player sprinting
 	void StopSprinting();
+
+	// Handle interaction with objects (key E)
+	void Interact();
 	
 	/* --- Variables--- */ 
 	// Player mesh component
@@ -73,6 +76,10 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
 	float walkSpeed = 200;
 
+	// Player air control 
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float airControl = .1;
+
 private:
 	/* --- Methods--- */
 
@@ -86,4 +93,12 @@ private:
 
 	// Gamemode base
 	TObjectPtr<AMainGameModeBase> gameModeBase;
+
+	// Line trace length 
+	UPROPERTY(EditDefaultsOnly, Category = "Player Camera Properties")
+	float lineTraceLength = 100;
+
+	// Line trace start distance from camera
+	UPROPERTY(EditDefaultsOnly, Category = "Player Camera Properties")
+	float lineTraceStartOffset = 25;
 };
