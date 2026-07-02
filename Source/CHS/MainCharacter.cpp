@@ -154,7 +154,13 @@ void AMainCharacter::Interact()
 	FVector cameraLocation = playerCamera->GetComponentLocation();
 	
 	// Draw the line trace and check what was hit
-	DrawDebugLine(gameModeBase->playerWorld, cameraLocation, cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), FColor::Cyan, true, 5.0);
+	DrawDebugLine
+	(
+		gameModeBase->playerWorld, 
+		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
+		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), 
+		FColor::Cyan, true, 5.0);
+	
 	gameModeBase->playerWorld->LineTraceSingleByChannel
 	(
 		hitResult, 
@@ -163,10 +169,14 @@ void AMainCharacter::Interact()
 		ECollisionChannel::ECC_Visibility
 	);
 
-	// Log hit component
-	if ( IsValid( hitResult.GetComponent() ) )
+	// Log hit actor
+	if ( IsValid( hitResult.GetActor() ) )
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitResult.GetComponent()->GetName());
+		UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitResult.GetActor()->GetName());
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
 	}
 
 }
