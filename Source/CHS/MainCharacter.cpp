@@ -3,6 +3,7 @@
 
 #include "MainCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
 
 // Sets default values
 AMainCharacter::AMainCharacter()
@@ -40,6 +41,7 @@ void AMainCharacter::BeginPlay()
 	{
 		// Set up player movement properties: default speed 
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = walkSpeed;
+		gameModeBase->playerMovementComponent->AirControl = airControl;
 	}
 
 	
@@ -65,10 +67,11 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump)
+	// Bind action mappings (jump, sprint, interact)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
+	playerInputComponent->BindAction("Interact", EInputEvent::IE_Released, this, &AMainCharacter::Interact);
 }
 
 // Move the player forward
@@ -134,4 +137,36 @@ void AMainCharacter::StopSprinting()
 	{
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = walkSpeed;
 	}
+}
+
+// Handle player interaction (E key) 
+void AMainCharacter::Interact()
+{
+	// Game mode base is necessary for getting the stored player/world variables
+	if (!gameModeBase)
+	{
+		return;
+	}
+
+	// Initialize helper variables for line tracing and collision handling 
+	FHitResult hitResult;
+	FVector forwardVector = playerCamera->GetForwardVector();
+	FVector cameraLocation = playerCamera->GetComponentLocation();
+	
+	// Draw the line trace and check what was hit
+	DrawDebugLine(gameModeBase->playerWorld, cameraLocation, cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), FColor::Cyan, true, 5.0);
+	gameModeBase->playerWorld->LineTraceSingleByChannel
+	(
+		hitResult, 
+		cameraLocation + ( forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
+		cameraLocation + (forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength)), 
+		ECollisionChannel::ECC_Visibility
+	);
+
+	// Log hit component
+	if ( IsValid( hitResult.GetComponent() ) )
+	{
+		UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitResult.GetComponent()->GetName());
+	}
+
 }
