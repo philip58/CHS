@@ -3,6 +3,7 @@
 
 #include "MainCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "CardActor.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -15,6 +16,12 @@ AMainCharacter::AMainCharacter()
 	playerCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("Player Camera"));
 	playerCamera->SetupAttachment(RootComponent);
 	playerCamera->bUsePawnControlRotation = true;
+
+	// Set up card placeholder socket and properties: location, rotation
+	cardPlaceHolderSocket = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Socket"));
+	cardPlaceHolderSocket->SetupAttachment(RootComponent);
+	cardPlaceHolderSocket->SetRelativeLocation(FVector(75.0, 0.0, 40.0));
+	cardPlaceHolderSocket->SetRelativeRotation(FRotator(-20.0, 0.0, 0.0));
 
 }
 
@@ -42,6 +49,12 @@ void AMainCharacter::BeginPlay()
 		// Set up player movement properties: default speed 
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = walkSpeed;
 		gameModeBase->playerMovementComponent->AirControl = airControl;
+	}
+
+	if (cardPlaceHolderSocket)
+	{
+		cardPlaceHolderSocket->SetVisibility(false);
+		cardPlaceHolderSocket->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
 	
@@ -169,10 +182,28 @@ void AMainCharacter::Interact()
 		ECollisionChannel::ECC_Visibility
 	);
 
-	// Log hit actor
-	if ( IsValid( hitResult.GetActor() ) )
+	UPrimitiveComponent* hitComponent;
+	AActor* cardActor;
+	ACardActor* card;
+
+
+	hitComponent = hitResult.GetComponent();
+
+	// Log hit component
+	if (hitComponent)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitResult.GetActor()->GetName());
+		cardActor = hitComponent->GetOwner();
+		if (cardActor)
+		{
+			card = Cast<ACardActor>(cardActor);
+			//UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *cardActor->GetName());
+			if(card) card->EquipCard(this);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("Hit registered but no component owner found"));
+
+		}
 	}
 	else
 	{

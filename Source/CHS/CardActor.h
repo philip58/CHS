@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
+#include "MainCharacter.h"
 #include "CardActor.generated.h"
 
 UCLASS()
@@ -25,6 +26,9 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Equip card
+	void EquipCard(AMainCharacter* playerCharacter);
+
 	/* --- Variables --- */
 
 	// Card mesh
@@ -34,4 +38,13 @@ public:
 	// Card box collision
 	UPROPERTY(EditDefaultsOnly, Category = "Card Mesh Properties")
 	UBoxComponent* cardBoxCollision;
+
+private:
+	/* --- Methods --- */
+	
+
+	/* --- Variables --- */
+	bool bIsCardEquipped = false;
+
+	AMainCharacter* owningCharacter;
 };

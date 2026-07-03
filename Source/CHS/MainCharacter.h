@@ -64,21 +64,9 @@ public:
 	void Interact();
 	
 	/* --- Variables--- */ 
-	// Player mesh component
-	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh Properties")
-	UStaticMeshComponent* playerMesh;
-
-	// Player sprint speed
-	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
-	float sprintSpeed = 400;
-
-	// Player walk speed
-	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
-	float walkSpeed = 200;
-
-	// Player air control 
-	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
-	float airControl = .1;
+	// Card placeholder socket
+	UPROPERTY(EditDefaultsOnly)
+	UStaticMeshComponent* cardPlaceHolderSocket;
 
 private:
 	/* --- Methods--- */
@@ -101,4 +89,21 @@ private:
 	// Line trace start distance from camera
 	UPROPERTY(EditDefaultsOnly, Category = "Player Camera Properties")
 	float lineTraceStartOffset = 25;
+
+	// Player mesh component
+	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh Properties")
+	UStaticMeshComponent* playerMesh;
+
+	// Player sprint speed
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float sprintSpeed = 400;
+
+	// Player walk speed
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float walkSpeed = 200;
+
+	// Player air control 
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float airControl = .1;
+
 };
