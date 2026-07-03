@@ -20,7 +20,7 @@ void AMainGameModeBase::BeginPlay()
 	// Get the world
 	if (playerWorld)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Player World: %s"), *playerWorld->GetName());
+		//UE_LOG(LogTemp, Display, TEXT("Player World: %s"), *playerWorld->GetName());
 
 		playerController = playerWorld->GetFirstPlayerController();
 	}
@@ -28,7 +28,7 @@ void AMainGameModeBase::BeginPlay()
 	// Get main character  
 	if (playerController)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Player Controller: %s"), *playerController->GetName());
+		//UE_LOG(LogTemp, Display, TEXT("Player Controller: %s"), *playerController->GetName());
 
 		// Try to cast player character to AMainCharacter class
 		try
@@ -44,7 +44,7 @@ void AMainGameModeBase::BeginPlay()
 	// Get player movement component
 	if (mainCharacter)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Main character: %s"), *mainCharacter->GetName());
+		//UE_LOG(LogTemp, Display, TEXT("Main character: %s"), *mainCharacter->GetName());
 
 		playerMovementComponent = mainCharacter->GetCharacterMovement();
 	}
@@ -52,7 +52,7 @@ void AMainGameModeBase::BeginPlay()
 	// Log the player movement component
 	if (playerMovementComponent)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Player movement component: %s"), *playerMovementComponent->GetName());
+		//UE_LOG(LogTemp, Display, TEXT("Player movement component: %s"), *playerMovementComponent->GetName());
 	}
 
 	

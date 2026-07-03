@@ -19,6 +19,7 @@ ACardActor::ACardActor()
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardBoxCollision->SetupAttachment(RootComponent);
 	cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
+
 }
 
 // Called when the game starts or when spawned
@@ -33,5 +34,20 @@ void ACardActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+// Player equip card
+void ACardActor::EquipCard(AMainCharacter* playerCharacter)
+{
+	UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
+	bIsCardEquipped = false;
+
+	if (playerCharacter && playerCharacter->cardPlaceHolderSocket)
+	{
+		AActor* playerActor = Cast<AActor>(playerCharacter);
+		if (playerActor) this->AttachToActor(playerActor, FAttachmentTransformRules::KeepRelativeTransform);
+		this->SetActorLocation(playerCharacter->cardPlaceHolderSocket->GetComponentLocation());
+		this->SetActorRotation(playerCharacter->cardPlaceHolderSocket->GetComponentRotation());
+	}
 }
 
