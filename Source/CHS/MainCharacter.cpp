@@ -80,11 +80,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump, sprint, interact)
+	// Bind action mappings (jump, sprint, interact, throw)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
 	playerInputComponent->BindAction("Interact", EInputEvent::IE_Released, this, &AMainCharacter::Interact);
+	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
 }
 
 // Move the player forward
@@ -197,7 +198,11 @@ void AMainCharacter::Interact()
 		{
 			card = Cast<ACardActor>(cardActor);
 			//UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *cardActor->GetName());
-			if(card) card->EquipCard(this);
+			if (card)
+			{
+				card->EquipCard(this);
+				equippedCard = card;
+			}
 		}
 		else
 		{
@@ -209,5 +214,33 @@ void AMainCharacter::Interact()
 	{
 		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
 	}
+
+}
+
+// Throw equipped object ( card )
+void AMainCharacter::Throw()
+{
+	UStaticMeshComponent* mesh;
+
+	if (equippedCard)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Equipped card found"));
+		mesh = equippedCard->cardMesh;
+		if (mesh)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Card mesh found: %s"), *mesh->GetName());
+			mesh->SetSimulatePhysics(true);
+			mesh->AddImpulse(playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Display, TEXT("No card mesh found"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("No equipped card found"));
+	}
+
 
 }

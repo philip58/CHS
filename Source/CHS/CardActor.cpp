@@ -2,6 +2,7 @@
 
 
 #include "CardActor.h"
+#include "MainCharacter.h"
 
 // Sets default values
 ACardActor::ACardActor()
@@ -9,16 +10,20 @@ ACardActor::ACardActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Create card mesh component
+	// Create card mesh component and set its properties
 	cardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Mesh"));
-	cardMesh->SetupAttachment(RootComponent);
 	cardMesh->SetRelativeScale3D(FVector(-0.01, 10.0, 14.0));
+	this->SetRootComponent(cardMesh);
+
 
 	// Create card box collision and set its properties
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardBoxCollision->SetupAttachment(RootComponent);
 	cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
+
+
+	
 
 }
 
@@ -44,6 +49,7 @@ void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 
 	if (playerCharacter && playerCharacter->cardPlaceHolderSocket)
 	{
+		if (cardMesh) cardMesh->SetSimulatePhysics(false);
 		AActor* playerActor = Cast<AActor>(playerCharacter);
 		if (playerActor) this->AttachToActor(playerActor, FAttachmentTransformRules::KeepRelativeTransform);
 		this->SetActorLocation(playerCharacter->cardPlaceHolderSocket->GetComponentLocation());

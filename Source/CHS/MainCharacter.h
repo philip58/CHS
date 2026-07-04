@@ -8,6 +8,8 @@
 #include "MainGameModeBase.h"
 #include "MainCharacter.generated.h"
 
+class ACardActor;
+
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
 {
@@ -62,6 +64,9 @@ public:
 
 	// Handle interaction with objects (key E)
 	void Interact();
+
+	// Throw the equipped object (key Q)
+	void Throw();
 	
 	/* --- Variables--- */ 
 	// Card placeholder socket
@@ -105,5 +110,13 @@ private:
 	// Player air control 
 	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
 	float airControl = .1;
+	
+	// Equipped card
+	ACardActor* equippedCard;
+
+	// Throw velocity
+	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	float throwVelocity = 10.0;
+
 
 };

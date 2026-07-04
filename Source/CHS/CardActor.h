@@ -5,8 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "Components/BoxComponent.h"
-#include "MainCharacter.h"
 #include "CardActor.generated.h"
+
+class AMainCharacter;
 
 UCLASS()
 class CHS_API ACardActor : public AActor
@@ -39,12 +40,15 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Mesh Properties")
 	UBoxComponent* cardBoxCollision;
 
+
 private:
 	/* --- Methods --- */
 	
 
 	/* --- Variables --- */
+	// Is the card equipped by a player
 	bool bIsCardEquipped = false;
 
+	// Player equipping the card
 	AMainCharacter* owningCharacter;
 };
