@@ -115,8 +115,12 @@ private:
 	ACardActor* equippedCard;
 
 	// Throw velocity
-	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
+	UPROPERTY(EditDefaultsOnly, Category = "Card Properties")
 	float throwVelocity = 10.0;
+
+	// Throw height
+	UPROPERTY(EditDefaultsOnly, Category = "Card Properties")
+	float throwHeight = 10.0;
 
 
 };

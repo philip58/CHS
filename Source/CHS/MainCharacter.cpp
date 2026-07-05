@@ -229,8 +229,14 @@ void AMainCharacter::Throw()
 		if (mesh)
 		{
 			UE_LOG(LogTemp, Display, TEXT("Card mesh found: %s"), *mesh->GetName());
+			equippedCard->setIsCardEquipped(false);
 			mesh->SetSimulatePhysics(true);
-			mesh->AddImpulse(playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity));
+			mesh->AddImpulse( 
+				( 
+					playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity)
+				)
+				+ FVector(0, 0, throwHeight) 
+			);
 		}
 		else
 		{

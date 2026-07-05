@@ -20,10 +20,8 @@ ACardActor::ACardActor()
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardBoxCollision->SetupAttachment(RootComponent);
-	cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
-
-
-	
+	//cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
+	cardBoxCollision->SetRelativeScale3D( FVector(0.010000, 0.031500, 0.031000) );
 
 }
 
@@ -39,21 +37,41 @@ void ACardActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(bIsCardEquipped)
+	{
+		if (playerCardSocket && this->GetActorLocation() != playerCardSocket->GetComponentLocation())
+		{
+			this->SetActorLocation(playerCardSocket->GetComponentLocation());
+			this->SetActorRotation(playerCardSocket->GetComponentRotation());
+		}
+	}
+
 }
 
 // Player equip card
 void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 {
-	UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
-	bIsCardEquipped = false;
+	playerCardSocket = playerCharacter->cardPlaceHolderSocket;
 
-	if (playerCharacter && playerCharacter->cardPlaceHolderSocket)
+	if (playerCharacter && playerCardSocket)
 	{
+		UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
+		setIsCardEquipped(true);
+		owningCharacter = playerCharacter;
+
 		if (cardMesh) cardMesh->SetSimulatePhysics(false);
-		AActor* playerActor = Cast<AActor>(playerCharacter);
-		if (playerActor) this->AttachToActor(playerActor, FAttachmentTransformRules::KeepRelativeTransform);
-		this->SetActorLocation(playerCharacter->cardPlaceHolderSocket->GetComponentLocation());
-		this->SetActorRotation(playerCharacter->cardPlaceHolderSocket->GetComponentRotation());
+		if (playerCharacter) this->AttachToComponent(playerCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		this->SetActorLocation(playerCardSocket->GetComponentLocation());
+		this->SetActorRotation(playerCardSocket->GetComponentRotation());
 	}
 }
+
+
+// Set is equipped boolean
+void ACardActor::setIsCardEquipped(bool isEquipped)
+{
+	bIsCardEquipped = isEquipped;
+}
+
+
 

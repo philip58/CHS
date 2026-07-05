@@ -40,6 +40,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Mesh Properties")
 	UBoxComponent* cardBoxCollision;
 
+	// Set is card equipped boolean
+	void setIsCardEquipped(bool isEquipped);
+
 
 private:
 	/* --- Methods --- */
@@ -51,4 +54,7 @@ private:
 
 	// Player equipping the card
 	AMainCharacter* owningCharacter;
+
+	// Player card socket
+	UStaticMeshComponent* playerCardSocket;
 };
