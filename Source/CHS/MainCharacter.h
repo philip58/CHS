@@ -75,6 +75,7 @@ public:
 
 private:
 	/* --- Methods--- */
+	void EquipCard(ACardActor* cardActor);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
@@ -114,6 +115,9 @@ private:
 	// Equipped card
 	ACardActor* equippedCard;
 
+	// Hash map of all card the player has and a corresponding boolean to represent if card is currently selected or not
+	TArray<TObjectPtr<ACardActor>> cardsInInventory;
+
 	// Throw velocity
 	UPROPERTY(EditDefaultsOnly, Category = "Card Properties")
 	float throwVelocity = 10.0;
@@ -121,6 +125,9 @@ private:
 	// Throw height
 	UPROPERTY(EditDefaultsOnly, Category = "Card Properties")
 	float throwHeight = 10.0;
+
+	// Counter to hold the position of which card is equipped
+	int equippedCardPos = -1;
 
 
 };

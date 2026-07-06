@@ -48,7 +48,7 @@ void ACardActor::Tick(float DeltaTime)
 
 }
 
-// Player equip card
+// Player equip card, attach to player card socket and remove collision channel
 void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 {
 	playerCardSocket = playerCharacter->cardPlaceHolderSocket;
@@ -56,19 +56,28 @@ void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 	if (playerCharacter && playerCardSocket)
 	{
 		UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
-		setIsCardEquipped(true);
+		SetIsCardEquipped(true);
 		owningCharacter = playerCharacter;
 
 		if (cardMesh) cardMesh->SetSimulatePhysics(false);
 		if (playerCharacter) this->AttachToComponent(playerCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		this->SetActorLocation(playerCardSocket->GetComponentLocation());
 		this->SetActorRotation(playerCardSocket->GetComponentRotation());
+		cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+		cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	}
+}
+
+// Player unequip card, add collision channel back 
+void ACardActor::UnequipCard()
+{
+	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 }
 
 
 // Set is equipped boolean
-void ACardActor::setIsCardEquipped(bool isEquipped)
+void ACardActor::SetIsCardEquipped(bool isEquipped)
 {
 	bIsCardEquipped = isEquipped;
 }

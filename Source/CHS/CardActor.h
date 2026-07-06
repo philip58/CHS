@@ -41,7 +41,10 @@ public:
 	UBoxComponent* cardBoxCollision;
 
 	// Set is card equipped boolean
-	void setIsCardEquipped(bool isEquipped);
+	void SetIsCardEquipped(bool isEquipped);
+
+	// Player unequip card
+	void UnequipCard();
 
 
 private:
