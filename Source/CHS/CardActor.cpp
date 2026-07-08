@@ -2,6 +2,7 @@
 
 
 #include "CardActor.h"
+#include "MainCharacter.h"
 
 // Sets default values
 ACardActor::ACardActor()
@@ -9,16 +10,18 @@ ACardActor::ACardActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Create card mesh component
+	// Create card mesh component and set its properties
 	cardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Mesh"));
-	cardMesh->SetupAttachment(RootComponent);
 	cardMesh->SetRelativeScale3D(FVector(-0.01, 10.0, 14.0));
+	this->SetRootComponent(cardMesh);
+
 
 	// Create card box collision and set its properties
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardBoxCollision->SetupAttachment(RootComponent);
-	cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
+	//cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
+	cardBoxCollision->SetRelativeScale3D( FVector(0.010000, 0.031500, 0.031000) );
 
 }
 
@@ -34,20 +37,50 @@ void ACardActor::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(bIsCardEquipped)
+	{
+		if (playerCardSocket && this->GetActorLocation() != playerCardSocket->GetComponentLocation())
+		{
+			this->SetActorLocation(playerCardSocket->GetComponentLocation());
+			this->SetActorRotation(playerCardSocket->GetComponentRotation());
+		}
+	}
+
 }
 
-// Player equip card
+// Player equip card, attach to player card socket and remove collision channel
 void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 {
-	UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
-	bIsCardEquipped = false;
+	playerCardSocket = playerCharacter->cardPlaceHolderSocket;
 
-	if (playerCharacter && playerCharacter->cardPlaceHolderSocket)
+	if (playerCharacter && playerCardSocket)
 	{
-		AActor* playerActor = Cast<AActor>(playerCharacter);
-		if (playerActor) this->AttachToActor(playerActor, FAttachmentTransformRules::KeepRelativeTransform);
-		this->SetActorLocation(playerCharacter->cardPlaceHolderSocket->GetComponentLocation());
-		this->SetActorRotation(playerCharacter->cardPlaceHolderSocket->GetComponentRotation());
+		UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
+		SetIsCardEquipped(true);
+		owningCharacter = playerCharacter;
+
+		if (cardMesh) cardMesh->SetSimulatePhysics(false);
+		if (playerCharacter) this->AttachToComponent(playerCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
+		this->SetActorLocation(playerCardSocket->GetComponentLocation());
+		this->SetActorRotation(playerCardSocket->GetComponentRotation());
+		cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+		cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	}
 }
+
+// Player unequip card, add collision channel back 
+void ACardActor::UnequipCard()
+{
+	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+}
+
+
+// Set is equipped boolean
+void ACardActor::SetIsCardEquipped(bool isEquipped)
+{
+	bIsCardEquipped = isEquipped;
+}
+
+
 

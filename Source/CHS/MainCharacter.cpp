@@ -80,11 +80,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump, sprint, interact)
+	// Bind action mappings (jump, sprint, interact, throw)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
 	playerInputComponent->BindAction("Interact", EInputEvent::IE_Released, this, &AMainCharacter::Interact);
+	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
 }
 
 // Move the player forward
@@ -174,6 +175,7 @@ void AMainCharacter::Interact()
 		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), 
 		FColor::Cyan, true, 5.0);
 	
+	// Line trace to see if the player is looking directly at something that they can interact with
 	gameModeBase->playerWorld->LineTraceSingleByChannel
 	(
 		hitResult, 
@@ -182,32 +184,116 @@ void AMainCharacter::Interact()
 		ECollisionChannel::ECC_Visibility
 	);
 
+	// Helper variables
 	UPrimitiveComponent* hitComponent;
-	AActor* cardActor;
+	AActor* hitActor;
 	ACardActor* card;
-
-
 	hitComponent = hitResult.GetComponent();
 
-	// Log hit component
-	if (hitComponent)
+	// Return if nothing was hit
+	if (!hitComponent)
 	{
-		cardActor = hitComponent->GetOwner();
-		if (cardActor)
-		{
-			card = Cast<ACardActor>(cardActor);
-			//UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *cardActor->GetName());
-			if(card) card->EquipCard(this);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Display, TEXT("Hit registered but no component owner found"));
+		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
+		return;
+	}
 
-		}
+	// Return if there is no actor
+	hitActor = hitComponent->GetOwner();
+	if (!hitActor)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Hit registered but no component owner found"));
+		return;
+	}
+
+	// Return if the hit actor is not a card, otherwise cast it into an ACardActor
+	if ( hitActor->IsA(ACardActor::StaticClass()) )
+	{
+		UE_LOG(LogTemp, Display, TEXT("Hit actor is a Card"));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
+		UE_LOG(LogTemp, Display, TEXT("Hit actor is NOT a Card. Hit actor class name: %s."), *hitActor->GetClass()->GetName()); 
+		return;
+	}
+	card = Cast<ACardActor>(hitActor);
+
+	// Return if the card hit is the equipped card
+	if (card == equippedCard)
+	{
+		return;
 	}
 
+	// If we already have an equipped card, unequip it
+	if (equippedCard)
+	{
+		equippedCard->SetIsCardEquipped(false);
+		equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+		equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
+		equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
+	}
+
+	// Equip the card and append it to the card inventory  
+	UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitActor->GetName());
+	if (card)
+	{
+		EquipCard(card);
+		++equippedCardPos;
+	}
+
+}
+
+// Throw equipped object ( card )
+void AMainCharacter::Throw()
+{
+	// If nothing is equipped, return
+	if (!equippedCard)
+	{
+		UE_LOG(LogTemp, Display, TEXT("No equipped card found"));
+		return;
+
+	}
+
+	// Return if there is no mesh found for the currently equipped card
+	UStaticMeshComponent* mesh;
+	mesh = equippedCard->cardMesh;
+	if (!mesh)
+	{
+		UE_LOG(LogTemp, Display, TEXT("No card mesh found"));
+		return;
+	}
+
+	// Throw the currently equipped card
+	UE_LOG(LogTemp, Display, TEXT("Card mesh found: %s"), *mesh->GetName());
+	equippedCard->SetIsCardEquipped(false);
+	equippedCard->UnequipCard();
+	mesh->SetSimulatePhysics(true);
+	mesh->AddImpulse(
+		(
+			playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity)
+			)
+		+ FVector(0, 0, throwHeight)
+	);
+
+	// Remove the card from the inventory
+	UE_LOG(LogTemp, Display, TEXT("Equipped Card Position: %i"), equippedCardPos);
+	cardsInInventory.RemoveSingle(equippedCard);
+	--equippedCardPos;
+	equippedCard = nullptr;
+
+	// If there are more cards in the inventory, equip the next one 
+	if (equippedCardPos >= 0)
+	{
+		ACardActor* nextEquippedCard;
+		nextEquippedCard = cardsInInventory[equippedCardPos];
+		if (nextEquippedCard) EquipCard(nextEquippedCard);
+	}
+
+}
+
+// Handle the card equipping logic and maintain relevant variables, current equipped card, inventory, and equipped card position
+void AMainCharacter::EquipCard(ACardActor* cardActor)
+{
+	cardActor->EquipCard(this);
+	equippedCard = cardActor;
+	cardsInInventory.Push(cardActor);
 }
