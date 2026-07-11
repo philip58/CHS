@@ -217,6 +217,12 @@ void AMainCharacter::Interact()
 	}
 	card = Cast<ACardActor>(hitActor);
 
+	// Return if we do not have a hit card
+	if (!card)
+	{
+		return;
+	}
+
 	// Return if the card hit is the equipped card
 	if (card == equippedCard)
 	{
@@ -226,19 +232,18 @@ void AMainCharacter::Interact()
 	// If we already have an equipped card, unequip it
 	if (equippedCard)
 	{
-		equippedCard->SetIsCardEquipped(false);
 		equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
 		equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
 		equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
+		equippedCard->SetIsCardEquipped(false);
 	}
 
 	// Equip the card and append it to the card inventory  
 	UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitActor->GetName());
-	if (card)
-	{
-		EquipCard(card);
-		++equippedCardPos;
-	}
+
+	EquipCard(card);
+	cardsInInventory.Push(card);
+	++equippedCardPos;
 
 }
 
@@ -284,16 +289,15 @@ void AMainCharacter::Throw()
 	if (equippedCardPos >= 0)
 	{
 		ACardActor* nextEquippedCard;
-		nextEquippedCard = cardsInInventory[equippedCardPos];
+		nextEquippedCard = cardsInInventory[0];
 		if (nextEquippedCard) EquipCard(nextEquippedCard);
 	}
 
 }
 
-// Handle the card equipping logic and maintain relevant variables, current equipped card, inventory, and equipped card position
+// Handle the card equipping logic and maintain relevant variables, current equipped card, and equipped card position
 void AMainCharacter::EquipCard(ACardActor* cardActor)
 {
 	cardActor->EquipCard(this);
 	equippedCard = cardActor;
-	cardsInInventory.Push(cardActor);
 }
