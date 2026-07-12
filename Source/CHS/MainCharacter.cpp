@@ -289,7 +289,7 @@ void AMainCharacter::Throw()
 	if (equippedCardPos >= 0)
 	{
 		ACardActor* nextEquippedCard;
-		nextEquippedCard = cardsInInventory[0];
+		nextEquippedCard = cardsInInventory[equippedCardPos];
 		if (nextEquippedCard) EquipCard(nextEquippedCard);
 	}
 
