@@ -67,7 +67,13 @@ public:
 
 	// Throw the equipped object (key Q)
 	void Throw();
+
+	// Scroll up method: on scroll up, cycle through the inventory increasingly
+	void ScrollUp();
 	
+	// Scroll down method: on scroll down, cycle through the inventory decreasingly
+	void ScrollDown();
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
@@ -75,7 +81,11 @@ public:
 
 private:
 	/* --- Methods--- */
+	//Equip the card
 	void EquipCard(ACardActor* cardActor);
+
+	// Unequip the card
+	void UnequipCard(ACardActor* cardActor);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
