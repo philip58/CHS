@@ -12,7 +12,7 @@ ACardActor::ACardActor()
 
 	// Create card mesh component and set its properties
 	cardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Mesh"));
-	cardMesh->SetRelativeScale3D(FVector(-0.01, 10.0, 14.0));
+	cardMesh->SetRelativeScale3D(FVector(.2, .2, .2));
 	this->SetRootComponent(cardMesh);
 
 
@@ -20,8 +20,7 @@ ACardActor::ACardActor()
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardBoxCollision->SetupAttachment(RootComponent);
-	//cardBoxCollision->SetRelativeScale3D( FVector(-0.01,0.31,0.44) );
-	cardBoxCollision->SetRelativeScale3D( FVector(0.010000, 0.031500, 0.031000) );
+	cardBoxCollision->SetRelativeScale3D( FVector(0.0,1.5625,2.2125) );
 
 }
 
