@@ -54,7 +54,6 @@ void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 
 	if (playerCharacter && playerCardSocket)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Card equipped: %s"), *this->GetName());
 		SetIsCardEquipped(true);
 		owningCharacter = playerCharacter;
 

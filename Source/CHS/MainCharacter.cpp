@@ -80,7 +80,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump, sprint, interact, throw, scroll up/down)
+	// Bind action mappings (jump, sprint, interact, throw, scroll up/down, toggle inventory)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
@@ -88,6 +88,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
 	playerInputComponent->BindAction("ScrollUp", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollUp);
 	playerInputComponent->BindAction("ScrollDown", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollDown);
+	playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
 }
 
 // Move the player forward
@@ -195,7 +196,6 @@ void AMainCharacter::Interact()
 	// Return if nothing was hit
 	if (!hitComponent)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
 		return;
 	}
 
@@ -203,7 +203,6 @@ void AMainCharacter::Interact()
 	hitActor = hitComponent->GetOwner();
 	if (!hitActor)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit registered but no component owner found"));
 		return;
 	}
 
@@ -238,8 +237,6 @@ void AMainCharacter::Interact()
 	}
 
 	// Equip the card and append it to the card inventory  
-	UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitActor->GetName());
-
 	EquipCard(card);
 	cardsInInventory.Push(card);
 	++equippedCardPos;
@@ -252,9 +249,7 @@ void AMainCharacter::Throw()
 	// If nothing is equipped, return
 	if (!equippedCard)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No equipped card found"));
 		return;
-
 	}
 
 	// Return if there is no mesh found for the currently equipped card
@@ -267,7 +262,6 @@ void AMainCharacter::Throw()
 	}
 
 	// Throw the currently equipped card
-	UE_LOG(LogTemp, Display, TEXT("Card mesh found: %s"), *mesh->GetName());
 	equippedCard->SetIsCardEquipped(false);
 	equippedCard->UnequipCard();
 	mesh->SetSimulatePhysics(true);
@@ -279,7 +273,6 @@ void AMainCharacter::Throw()
 	);
 
 	// Remove the card from the inventory
-	UE_LOG(LogTemp, Display, TEXT("Equipped Card Position: %i"), equippedCardPos);
 	cardsInInventory.RemoveSingle(equippedCard);
 	
 	if (equippedCardPos == 0)
@@ -364,6 +357,20 @@ void AMainCharacter::ScrollDown()
 	equippedCard->UnequipCard();
 	EquipCard(cardsInInventory[tempPos]);
 	
+}
+
+// Hide/unhide inventory on press of Tab key
+void AMainCharacter::ToggleInventory()
+{
+	if (equippedCard)
+	{
+		UnequipCard(equippedCard);
+		equippedCard = nullptr;
+	}
+	else
+	{
+		EquipCard(cardsInInventory[equippedCardPos]);
+	}
 }
 
 // Handle the card equipping logic and maintain relevant variables, current equipped card, and equipped card position

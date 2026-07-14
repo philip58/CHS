@@ -74,6 +74,9 @@ public:
 	// Scroll down method: on scroll down, cycle through the inventory decreasingly
 	void ScrollDown();
 
+	// Toggle inventory, hide/unhide equipped card
+	void ToggleInventory();
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
