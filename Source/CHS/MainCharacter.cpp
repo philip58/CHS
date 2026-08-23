@@ -80,12 +80,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump, sprint, interact, throw)
+	// Bind action mappings (jump, sprint, interact, throw, scroll up/down, toggle inventory)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
 	playerInputComponent->BindAction("Interact", EInputEvent::IE_Released, this, &AMainCharacter::Interact);
 	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
+	playerInputComponent->BindAction("ScrollUp", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollUp);
+	playerInputComponent->BindAction("ScrollDown", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollDown);
+	playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
 }
 
 // Move the player forward
@@ -193,7 +196,6 @@ void AMainCharacter::Interact()
 	// Return if nothing was hit
 	if (!hitComponent)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No Hit Result"));
 		return;
 	}
 
@@ -201,20 +203,15 @@ void AMainCharacter::Interact()
 	hitActor = hitComponent->GetOwner();
 	if (!hitActor)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit registered but no component owner found"));
 		return;
 	}
 
 	// Return if the hit actor is not a card, otherwise cast it into an ACardActor
-	if ( hitActor->IsA(ACardActor::StaticClass()) )
+	if ( !hitActor->IsA(ACardActor::StaticClass()) )
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit actor is a Card"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Display, TEXT("Hit actor is NOT a Card. Hit actor class name: %s."), *hitActor->GetClass()->GetName()); 
 		return;
 	}
+
 	card = Cast<ACardActor>(hitActor);
 
 	// Return if we do not have a hit card
@@ -232,15 +229,10 @@ void AMainCharacter::Interact()
 	// If we already have an equipped card, unequip it
 	if (equippedCard)
 	{
-		equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-		equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
-		equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
-		equippedCard->SetIsCardEquipped(false);
+		UnequipCard(equippedCard);
 	}
 
 	// Equip the card and append it to the card inventory  
-	UE_LOG(LogTemp, Display, TEXT("Hit Result: %s"), *hitActor->GetName());
-
 	EquipCard(card);
 	cardsInInventory.Push(card);
 	++equippedCardPos;
@@ -253,26 +245,23 @@ void AMainCharacter::Throw()
 	// If nothing is equipped, return
 	if (!equippedCard)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No equipped card found"));
 		return;
-
 	}
 
 	// Return if there is no mesh found for the currently equipped card
-	UStaticMeshComponent* mesh;
-	mesh = equippedCard->cardMesh;
-	if (!mesh)
+	UBoxComponent* boxComp;
+	boxComp = equippedCard->cardBoxCollision;
+	if (!boxComp)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No card mesh found"));
+		UE_LOG(LogTemp, Display, TEXT("No card collision found"));
 		return;
 	}
 
 	// Throw the currently equipped card
-	UE_LOG(LogTemp, Display, TEXT("Card mesh found: %s"), *mesh->GetName());
 	equippedCard->SetIsCardEquipped(false);
 	equippedCard->UnequipCard();
-	mesh->SetSimulatePhysics(true);
-	mesh->AddImpulse(
+	boxComp->SetSimulatePhysics(true);
+	boxComp->AddImpulse(
 		(
 			playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity)
 			)
@@ -280,9 +269,17 @@ void AMainCharacter::Throw()
 	);
 
 	// Remove the card from the inventory
-	UE_LOG(LogTemp, Display, TEXT("Equipped Card Position: %i"), equippedCardPos);
 	cardsInInventory.RemoveSingle(equippedCard);
-	--equippedCardPos;
+	
+	if (equippedCardPos == 0)
+	{
+		equippedCardPos = cardsInInventory.Num() - 1;
+	}
+	else
+	{
+		--equippedCardPos;
+	}
+
 	equippedCard = nullptr;
 
 	// If there are more cards in the inventory, equip the next one 
@@ -295,9 +292,95 @@ void AMainCharacter::Throw()
 
 }
 
+// When the player scrolls up, iterate positively through the inventory
+void AMainCharacter::ScrollUp()
+{
+	if (cardsInInventory.IsEmpty())
+	{
+		return;
+	}
+
+	if(!equippedCard)
+	{
+		return;
+	}
+	
+	int tempPos;
+
+	if (equippedCardPos == (cardsInInventory.Num() - 1))
+	{
+		tempPos = 0;
+		equippedCardPos = 0;
+	}
+	else
+	{
+		++equippedCardPos;
+		tempPos = equippedCardPos;
+	}
+	
+	UnequipCard(equippedCard);
+	equippedCard->UnequipCard();
+	EquipCard(cardsInInventory[tempPos]);
+}
+
+// When the player scrolls up, iterate negatively through the inventory
+void AMainCharacter::ScrollDown()
+{
+	if (cardsInInventory.IsEmpty())
+	{
+		return;
+	}
+
+	if (!equippedCard)
+	{
+		return;
+	}
+
+	int tempPos;
+
+	if (equippedCardPos == 0)
+	{
+		tempPos = cardsInInventory.Num() - 1;
+		equippedCardPos = cardsInInventory.Num() - 1;
+	}
+	else
+	{
+		--equippedCardPos;
+		tempPos = equippedCardPos;
+	}
+
+	UnequipCard(equippedCard);
+	equippedCard->UnequipCard();
+	EquipCard(cardsInInventory[tempPos]);
+	
+}
+
+// Hide/unhide inventory on press of Tab key
+void AMainCharacter::ToggleInventory()
+{
+	if (equippedCard)
+	{
+		UnequipCard(equippedCard);
+		equippedCard = nullptr;
+	}
+	else
+	{
+		EquipCard(cardsInInventory[equippedCardPos]);
+	}
+}
+
 // Handle the card equipping logic and maintain relevant variables, current equipped card, and equipped card position
 void AMainCharacter::EquipCard(ACardActor* cardActor)
 {
 	cardActor->EquipCard(this);
 	equippedCard = cardActor;
+}
+
+// Handle the card unequipping logic and maintain relevant variables, current equipped card, and equipped card position
+void AMainCharacter::UnequipCard(ACardActor* cardActor)
+{
+	equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
+	equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
+	equippedCard->SetIsCardEquipped(false);
 }

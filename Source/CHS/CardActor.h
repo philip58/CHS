@@ -81,7 +81,9 @@ public:
 
 private:
 	/* --- Methods --- */
-	
+	// Overlap collision method
+	UFUNCTION(BlueprintCallable)
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 	/* --- Variables --- */
 	// Is the card equipped by a player
@@ -99,4 +101,8 @@ private:
 
 	// Card value
 	ECardValue cardValue;
+
+	// Vertical offset above the table card slot 
+	UPROPERTY(EditAnywhere)
+	float tableSlotVertOffset = 30.0f;
 };
