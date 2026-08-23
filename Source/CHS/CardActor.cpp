@@ -2,6 +2,7 @@
 
 
 #include "CardActor.h"
+#include "CardTableSlot.h"
 #include "MainCharacter.h"
 
 // Sets default values
@@ -13,14 +14,21 @@ ACardActor::ACardActor()
 	// Create card mesh component and set its properties
 	cardMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Mesh"));
 	cardMesh->SetRelativeScale3D(FVector(.2, .2, .2));
-	this->SetRootComponent(cardMesh);
+	/*this->SetRootComponent(cardMesh);*/
 
 
 	// Create card box collision and set its properties
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-	cardBoxCollision->SetupAttachment(RootComponent);
-	cardBoxCollision->SetRelativeScale3D( FVector(0.0,1.5625,2.2125) );
+	//cardBoxCollision->SetupAttachment(RootComponent);
+	cardBoxCollision->SetRelativeScale3D( FVector(0.05,1.5625,2.2125) );
+
+
+	this->SetRootComponent(cardBoxCollision);
+	cardMesh->SetupAttachment(RootComponent);
+
+	cardBoxCollision->OnComponentBeginOverlap.AddDynamic(this, &ACardActor::OnBeginOverlap);
+
 
 }
 
@@ -28,7 +36,7 @@ ACardActor::ACardActor()
 void ACardActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 }
 
 // Called every frame
@@ -58,11 +66,13 @@ void ACardActor::EquipCard(AMainCharacter* playerCharacter)
 		owningCharacter = playerCharacter;
 
 		if (cardMesh) cardMesh->SetSimulatePhysics(false);
+		if (cardBoxCollision) cardBoxCollision->SetSimulatePhysics(false);
 		if (playerCharacter) this->AttachToComponent(playerCharacter->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 		this->SetActorLocation(playerCardSocket->GetComponentLocation());
 		this->SetActorRotation(playerCardSocket->GetComponentRotation());
 		cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 		cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+		cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	}
 }
 
@@ -71,6 +81,7 @@ void ACardActor::UnequipCard()
 {
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 
@@ -78,6 +89,32 @@ void ACardActor::UnequipCard()
 void ACardActor::SetIsCardEquipped(bool isEquipped)
 {
 	bIsCardEquipped = isEquipped;
+}
+
+// Collision overlap method for card placing on table slot
+void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	UE_LOG(LogTemp, Display, TEXT("Overlap started"));
+
+	if (!IsValid(OtherComp))
+	{
+		return;
+	}
+
+	AActor* compActor = OtherComp->GetOwner();
+	
+	if (compActor && compActor->IsA(ACardTableSlot::StaticClass()) )
+	{
+		UE_LOG(LogTemp, Display, TEXT("Card Overlapped with a table slot"));
+		this->SetActorRelativeRotation(FRotator(90, 0, 0));
+		this->SetActorLocation(compActor->GetActorLocation() + FVector(0,0, tableSlotVertOffset));
+		cardBoxCollision->SetSimulatePhysics(false);
+		cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Display, TEXT("Card table slot NOT Overlap"));
+	}
 }
 
 

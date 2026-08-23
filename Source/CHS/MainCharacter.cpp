@@ -207,15 +207,11 @@ void AMainCharacter::Interact()
 	}
 
 	// Return if the hit actor is not a card, otherwise cast it into an ACardActor
-	if ( hitActor->IsA(ACardActor::StaticClass()) )
+	if ( !hitActor->IsA(ACardActor::StaticClass()) )
 	{
-		UE_LOG(LogTemp, Display, TEXT("Hit actor is a Card"));
-	}
-	else
-	{
-		UE_LOG(LogTemp, Display, TEXT("Hit actor is NOT a Card. Hit actor class name: %s."), *hitActor->GetClass()->GetName()); 
 		return;
 	}
+
 	card = Cast<ACardActor>(hitActor);
 
 	// Return if we do not have a hit card
@@ -253,19 +249,19 @@ void AMainCharacter::Throw()
 	}
 
 	// Return if there is no mesh found for the currently equipped card
-	UStaticMeshComponent* mesh;
-	mesh = equippedCard->cardMesh;
-	if (!mesh)
+	UBoxComponent* boxComp;
+	boxComp = equippedCard->cardBoxCollision;
+	if (!boxComp)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No card mesh found"));
+		UE_LOG(LogTemp, Display, TEXT("No card collision found"));
 		return;
 	}
 
 	// Throw the currently equipped card
 	equippedCard->SetIsCardEquipped(false);
 	equippedCard->UnequipCard();
-	mesh->SetSimulatePhysics(true);
-	mesh->AddImpulse(
+	boxComp->SetSimulatePhysics(true);
+	boxComp->AddImpulse(
 		(
 			playerCamera->GetForwardVector() * FVector(throwVelocity, throwVelocity, throwVelocity)
 			)
