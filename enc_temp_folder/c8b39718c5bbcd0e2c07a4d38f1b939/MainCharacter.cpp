@@ -453,7 +453,7 @@ void AMainCharacter::InteractWithChair(AActor* interactedActor)
 		if (gameModeBase && gameModeBase->playerMovementComponent)
 		{
 			gameModeBase->playerMovementComponent->SetMovementMode(EMovementMode::MOVE_None);
-			this->SetActorLocation(playerChair->GetActorLocation() - FVector(0,0,chairSitOffset));
+			//gameModeBase->playerMovementComponent->DisableMovement();
 		}
 	}
 }
@@ -468,8 +468,7 @@ void AMainCharacter::LeaveChair()
 	}
 
 	// Move player away from chair and unset player sitting variables
-	this->SetActorLocation(this->GetActorLocation() + FVector(0, 0, distanceFromChair) );
-	
+	this->SetActorLocation(this->GetActorLocation() + (-playerChair->GetActorForwardVector() * FVector(distanceFromChair, 0, 0)));
 	bIsPlayerSitting = false;
 	playerChair->SetIsSatIn(false);
 	playerChair = nullptr;
@@ -478,7 +477,6 @@ void AMainCharacter::LeaveChair()
 	if (gameModeBase && gameModeBase->playerMovementComponent)
 	{
 		gameModeBase->playerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
-		gameModeBase->playerMovementComponent->AddImpulse(FVector(0, 0, chairExitVelocity));
 	}
 
 }
