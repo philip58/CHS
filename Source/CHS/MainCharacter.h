@@ -10,6 +10,7 @@
 
 class ACardActor;
 class APlayerChairSlot;
+class UPlayerHUD;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -100,6 +101,18 @@ private:
 	// Unequip the card
 	void UnequipCard(ACardActor* cardActor);
 
+	// LineTrace every frame for interactable handling
+	AActor* GetLineTraceHitActor();
+
+	// Handle loggic while hovering over an actor
+	void HandleHovering(AActor* actor);
+
+	// Handle loggic while hovering over a card
+	void CardHover(AActor* hoveredActor);
+
+	// Handle loggic while hovering over a chair
+	void ChairHover(AActor* hoveredActor);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -169,5 +182,11 @@ private:
 	// Player velocity when exiting in chair
 	UPROPERTY(EditAnywhere)
 	float chairExitVelocity = 10.0f;
+
+	// Actor in view hit by line trace during tick function
+	AActor* actorInView;
+
+	// Player HUD
+	UPlayerHUD* playerHUD;
 
 };

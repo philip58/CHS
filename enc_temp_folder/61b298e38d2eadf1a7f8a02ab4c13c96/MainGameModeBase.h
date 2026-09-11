@@ -7,8 +7,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "MainGameModeBase.generated.h"
 
-class UPlayerHUD;
-
 /**
  * 
  */
@@ -38,11 +36,4 @@ public:
 
 	// Globally accessible character
 	TObjectPtr<ACharacter> mainCharacter;
-
-	// Globally accessible ui
-	TObjectPtr<UPlayerHUD> playerHUD;
-
-	// Class object of UPlayerHUD
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UPlayerHUD> playerHUDClass;
 };

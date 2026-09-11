@@ -94,27 +94,28 @@ void ACardActor::SetIsCardEquipped(bool isEquipped)
 // Collision overlap method for card placing on table slot
 void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Display, TEXT("Overlap started"));
+	// Return if card is equipped
+	if (bIsCardEquipped)
+	{
+		return;
+	}
 
+	// If no overlap, return
 	if (!IsValid(OtherComp))
 	{
 		return;
 	}
 
+	// Check if other component is a table slot. If it is, set card in the slot
 	AActor* compActor = OtherComp->GetOwner();
-	
 	if (compActor && compActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		UE_LOG(LogTemp, Display, TEXT("Card Overlapped with a table slot"));
 		this->SetActorRelativeRotation(FRotator(90, 0, 0));
 		this->SetActorLocation(compActor->GetActorLocation() + FVector(0,0, tableSlotVertOffset));
 		cardBoxCollision->SetSimulatePhysics(false);
 		cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Display, TEXT("Card table slot NOT Overlap"));
-	}
+
 }
 
 
