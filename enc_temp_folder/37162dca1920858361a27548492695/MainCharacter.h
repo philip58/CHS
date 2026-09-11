@@ -100,6 +100,9 @@ private:
 	// Unequip the card
 	void UnequipCard(ACardActor* cardActor);
 
+	// LineTrace every frame for interactable handling
+	AActor* GetLineTraceHitActor();
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -161,4 +164,13 @@ private:
 	// Distance to move away from chair after exiting
 	UPROPERTY(EditAnywhere)
 	float distanceFromChair = 10.0f;
+
+	// Player offset when sitting in chair
+	UPROPERTY(EditAnywhere)
+	float chairSitOffset = 10.0f;
+
+	// Player velocity when exiting in chair
+	UPROPERTY(EditAnywhere)
+	float chairExitVelocity = 10.0f;
+
 };

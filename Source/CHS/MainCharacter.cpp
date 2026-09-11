@@ -66,6 +66,11 @@ void AMainCharacter::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	if ( IsValid( actorInView = GetLineTraceHitActor() ) )
+	{
+		HandleHovering(actorInView);
+	}
+
 }
 
 // Called to bind functionality to input
@@ -202,42 +207,8 @@ void AMainCharacter::Interact()
 		return;
 	}
 
-	// Initialize helper variables for line tracing and collision handling 
-	FHitResult hitResult;
-	FVector forwardVector = playerCamera->GetForwardVector();
-	FVector cameraLocation = playerCamera->GetComponentLocation();
-	
-	// Draw the line trace and check what was hit
-	DrawDebugLine
-	(
-		gameModeBase->playerWorld, 
-		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
-		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), 
-		FColor::Cyan, true, 5.0);
-	
-	// Line trace to see if the player is looking directly at something that they can interact with
-	gameModeBase->playerWorld->LineTraceSingleByChannel
-	(
-		hitResult, 
-		cameraLocation + ( forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
-		cameraLocation + (forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength)), 
-		ECollisionChannel::ECC_Visibility
-	);
-
-	// Helper variables
-	UPrimitiveComponent* hitComponent;
 	AActor* hitActor;
-	hitComponent = hitResult.GetComponent();
-
-	// Return if nothing was hit
-	if (!hitComponent)
-	{
-		return;
-	}
-
-	// Return if there is no actor
-	hitActor = hitComponent->GetOwner();
-	if (!hitActor)
+	if ( !IsValid( hitActor = GetLineTraceHitActor() ) )
 	{
 		return;
 	}
@@ -481,4 +452,84 @@ void AMainCharacter::LeaveChair()
 		gameModeBase->playerMovementComponent->AddImpulse(FVector(0, 0, chairExitVelocity));
 	}
 
+}
+
+// Line trace every frame and handle interactable items
+AActor* AMainCharacter::GetLineTraceHitActor()
+{
+	// Initialize helper variables for line tracing and collision handling 
+	FHitResult hitResult;
+	FVector forwardVector = playerCamera->GetForwardVector();
+	FVector cameraLocation = playerCamera->GetComponentLocation();
+
+	// Draw the line trace and check what was hit
+	DrawDebugLine
+	(
+		gameModeBase->playerWorld,
+		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
+		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength),
+		FColor::Cyan, true, 5.0);
+
+	// Line trace to see if the player is looking directly at something that they can interact with
+	gameModeBase->playerWorld->LineTraceSingleByChannel
+	(
+		hitResult,
+		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
+		cameraLocation + (forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength)),
+		ECollisionChannel::ECC_Visibility
+	);
+
+	// Helper variables
+	UPrimitiveComponent* hitComponent;
+	AActor* hitActor;
+	hitComponent = hitResult.GetComponent();
+
+	// Return if nothing was hit
+	if (!hitComponent)
+	{
+		return nullptr;
+	}
+
+	// Return if there is no actor
+	hitActor = hitComponent->GetOwner();
+	if (!hitActor)
+	{
+		return nullptr;
+	}
+
+	return hitActor;
+}
+
+// Handle logic when hovering over an actor with line trace
+void AMainCharacter::HandleHovering(AActor* hoveredActor)
+{
+	// If the actor is a card, call card hover method
+	if (hoveredActor->IsA(ACardActor::StaticClass()))
+	{
+		CardHover(hoveredActor);
+	}
+
+	// If the hit actor is a chair, call the chair hover method
+	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
+	{
+		ChairHover(hoveredActor);
+	}
+}
+
+// Handle loggic while hovering over a chair
+void AMainCharacter::CardHover(AActor* hoveredActor)
+{
+	// Get chair from actor
+	ACardActor* card;
+	card = Cast<ACardActor>(hoveredActor);
+	UE_LOG(LogTemp, Display, TEXT("Hovered over card"));
+}
+
+// Handle loggic while hovering over a chair
+void AMainCharacter::ChairHover(AActor* hoveredActor)
+{
+	// Get chair from actor
+	APlayerChairSlot* chair;
+	chair = Cast<APlayerChairSlot>(hoveredActor);
+	UE_LOG(LogTemp, Display, TEXT("Hovered over chair"));
 }

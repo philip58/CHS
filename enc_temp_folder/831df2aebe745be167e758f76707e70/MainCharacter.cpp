@@ -66,6 +66,8 @@ void AMainCharacter::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	/*GetLineTraceHitActor();*/
+
 }
 
 // Called to bind functionality to input
@@ -202,42 +204,8 @@ void AMainCharacter::Interact()
 		return;
 	}
 
-	// Initialize helper variables for line tracing and collision handling 
-	FHitResult hitResult;
-	FVector forwardVector = playerCamera->GetForwardVector();
-	FVector cameraLocation = playerCamera->GetComponentLocation();
-	
-	// Draw the line trace and check what was hit
-	DrawDebugLine
-	(
-		gameModeBase->playerWorld, 
-		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
-		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength), 
-		FColor::Cyan, true, 5.0);
-	
-	// Line trace to see if the player is looking directly at something that they can interact with
-	gameModeBase->playerWorld->LineTraceSingleByChannel
-	(
-		hitResult, 
-		cameraLocation + ( forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)), 
-		cameraLocation + (forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength)), 
-		ECollisionChannel::ECC_Visibility
-	);
-
-	// Helper variables
-	UPrimitiveComponent* hitComponent;
 	AActor* hitActor;
-	hitComponent = hitResult.GetComponent();
-
-	// Return if nothing was hit
-	if (!hitComponent)
-	{
-		return;
-	}
-
-	// Return if there is no actor
-	hitActor = hitComponent->GetOwner();
-	if (!hitActor)
+	if ( !IsValid( hitActor = GetLineTraceHitActor() ) )
 	{
 		return;
 	}
@@ -453,7 +421,7 @@ void AMainCharacter::InteractWithChair(AActor* interactedActor)
 		if (gameModeBase && gameModeBase->playerMovementComponent)
 		{
 			gameModeBase->playerMovementComponent->SetMovementMode(EMovementMode::MOVE_None);
-			//gameModeBase->playerMovementComponent->DisableMovement();
+			this->SetActorLocation(playerChair->GetActorLocation() - FVector(0,0,chairSitOffset));
 		}
 	}
 }
@@ -468,7 +436,8 @@ void AMainCharacter::LeaveChair()
 	}
 
 	// Move player away from chair and unset player sitting variables
-	this->SetActorLocation(this->GetActorLocation() + (-playerChair->GetActorForwardVector() * FVector(distanceFromChair, 0, 0)));
+	this->SetActorLocation(this->GetActorLocation() + FVector(0, 0, distanceFromChair) );
+	
 	bIsPlayerSitting = false;
 	playerChair->SetIsSatIn(false);
 	playerChair = nullptr;
@@ -477,6 +446,53 @@ void AMainCharacter::LeaveChair()
 	if (gameModeBase && gameModeBase->playerMovementComponent)
 	{
 		gameModeBase->playerMovementComponent->SetMovementMode(EMovementMode::MOVE_Walking);
+		gameModeBase->playerMovementComponent->AddImpulse(FVector(0, 0, chairExitVelocity));
 	}
 
+}
+
+// Line trace every frame and handle interactable items
+AActor* AMainCharacter::GetLineTraceHitActor()
+{
+	// Initialize helper variables for line tracing and collision handling 
+	FHitResult hitResult;
+	FVector forwardVector = playerCamera->GetForwardVector();
+	FVector cameraLocation = playerCamera->GetComponentLocation();
+
+	// Draw the line trace and check what was hit
+	DrawDebugLine
+	(
+		gameModeBase->playerWorld,
+		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
+		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength),
+		FColor::Cyan, true, 5.0);
+
+	// Line trace to see if the player is looking directly at something that they can interact with
+	gameModeBase->playerWorld->LineTraceSingleByChannel
+	(
+		hitResult,
+		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
+		cameraLocation + (forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength)),
+		ECollisionChannel::ECC_Visibility
+	);
+
+	// Helper variables
+	UPrimitiveComponent* hitComponent;
+	AActor* hitActor;
+	hitComponent = hitResult.GetComponent();
+
+	// Return if nothing was hit
+	if (!hitComponent)
+	{
+		return nullptr;
+	}
+
+	// Return if there is no actor
+	hitActor = hitComponent->GetOwner();
+	if (!hitActor)
+	{
+		return nullptr;
+	}
+
+	return hitActor;
 }
