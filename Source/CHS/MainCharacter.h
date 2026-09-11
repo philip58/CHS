@@ -10,6 +10,7 @@
 
 class ACardActor;
 class APlayerChairSlot;
+class UPlayerHUD;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -184,4 +185,8 @@ private:
 
 	// Actor in view hit by line trace during tick function
 	AActor* actorInView;
+
+	// Player HUD
+	UPlayerHUD* playerHUD;
+
 };

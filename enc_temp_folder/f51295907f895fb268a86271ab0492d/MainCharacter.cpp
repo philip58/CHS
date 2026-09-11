@@ -66,7 +66,10 @@ void AMainCharacter::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
-	/*GetLineTraceHitActor();*/
+	if ( IsValid( actorInView = GetLineTraceHitActor() ) )
+	{
+		HandleHovering(actorInView);
+	}
 
 }
 
@@ -495,4 +498,38 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 	}
 
 	return hitActor;
+}
+
+// Handle logic when hovering over an actor with line trace
+void AMainCharacter::HandleHovering(AActor* hoveredActor)
+{
+	// If the actor is a card, call card hover method
+	if (hoveredActor->IsA(ACardActor::StaticClass()))
+	{
+		CardHover(hoveredActor);
+	}
+
+	// If the hit actor is a chair, call the chair hover method
+	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
+	{
+		ChairHover(hoveredActor);
+	}
+}
+
+// Handle loggic while hovering over a chair
+void AMainCharacter::CardHover(AActor* hoveredActor)
+{
+	// Get chair from actor
+	ACardActor* card;
+	card = Cast<ACardActor>(hoveredActor);
+	UE_LOG(LogTemp, Display, TEXT("Hovered over card"));
+}
+
+// Handle loggic while hovering over a chair
+void AMainCharacter::ChairHover(AActor* hoveredActor)
+{
+	// Get chair from actor
+	APlayerChairSlot* chair;
+	chair = Cast<APlayerChairSlot>(hoveredActor);
+	UE_LOG(LogTemp, Display, TEXT("Hovered over chair"));
 }

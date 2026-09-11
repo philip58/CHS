@@ -2,6 +2,7 @@
 
 
 #include "MainGameModeBase.h"
+#include "PlayerHUD.h"
 #include "GameFramework/Character.h"
 
 // Class constructor
@@ -41,6 +42,13 @@ void AMainGameModeBase::BeginPlay()
 	if (mainCharacter)
 	{
 		playerMovementComponent = mainCharacter->GetCharacterMovement();
+	}
+
+	// Set up player HUD
+	playerHUD = CreateWidget<UPlayerHUD>(playerController, playerHUDClass);
+	if (playerHUD)
+	{
+		playerHUD->AddToViewport();
 	}
 
 }
