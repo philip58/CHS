@@ -5,6 +5,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CardActor.h"
 #include "PlayerChairSlot.h"
+#include "PlayerHUD.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -66,9 +67,16 @@ void AMainCharacter::Tick(float deltaTime)
 {
 	Super::Tick(deltaTime);
 
+	// Check if hovering over an actor or not
 	if ( IsValid( actorInView = GetLineTraceHitActor() ) )
 	{
+		// If hovering over something, call the hovering method  
 		HandleHovering(actorInView);
+	}
+	else
+	{
+		// If nothing is being hovered, clear the interact text
+		gameModeBase->playerHUD->SetInteractPopupText("");
 	}
 
 }
@@ -345,15 +353,25 @@ void AMainCharacter::ScrollDown()
 // Hide/unhide inventory on press of Tab key
 void AMainCharacter::ToggleInventory()
 {
+	// Deal with toggling inventory on/off
 	if (equippedCard)
 	{
+		// If card is equipped, toggle off inventory and unequip card
 		UnequipCard(equippedCard);
 		equippedCard = nullptr;
+		bIsInventoryTogggled = false;
+		return;
 	}
-	else
+	else if (cardsInInventory.Num() != 0)
 	{
+		// If card is not equipped, and invetory is not empty toggle on inventory and equip last picked up card
 		EquipCard(cardsInInventory[equippedCardPos]);
+		bIsInventoryTogggled = true;
+		return;
 	}
+
+	// If none of the above apply (inventory is empty), negate inventory toggled boolean
+	bIsInventoryTogggled = !bIsInventoryTogggled;
 }
 
 // Handle the card equipping logic and maintain relevant variables, current equipped card, and equipped card position
@@ -397,8 +415,13 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		UnequipCard(equippedCard);
 	}
 
-	// Equip the card and append it to the card inventory  
+	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
+	if (!bIsInventoryTogggled)
+	{
+		UnequipCard(equippedCard);
+		equippedCard = nullptr;
+	}
 	cardsInInventory.Push(card);
 	++equippedCardPos;
 }
@@ -463,12 +486,12 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 	FVector cameraLocation = playerCamera->GetComponentLocation();
 
 	// Draw the line trace and check what was hit
-	DrawDebugLine
+	/*DrawDebugLine
 	(
 		gameModeBase->playerWorld,
 		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
 		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength),
-		FColor::Cyan, true, 5.0);
+		FColor::Cyan, true, 5.0);*/
 
 	// Line trace to see if the player is looking directly at something that they can interact with
 	gameModeBase->playerWorld->LineTraceSingleByChannel
@@ -503,17 +526,30 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 // Handle logic when hovering over an actor with line trace
 void AMainCharacter::HandleHovering(AActor* hoveredActor)
 {
+	// Return if no gamemode base and no HUD
+	if (!gameModeBase || !gameModeBase->playerHUD)
+	{
+		return;
+	}
+
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
 		CardHover(hoveredActor);
+		gameModeBase->playerHUD->SetInteractPopupText("Press E to Interact");
+		return;
 	}
 
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
 	{
 		ChairHover(hoveredActor);
+		gameModeBase->playerHUD->SetInteractPopupText("Press E to Interact");
+		return;
 	}
+
+	// If nothing is being hovered, clear the interact text
+	gameModeBase->playerHUD->SetInteractPopupText("");
 }
 
 // Handle loggic while hovering over a chair
