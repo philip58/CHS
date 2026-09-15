@@ -189,4 +189,11 @@ private:
 	// Player HUD
 	UPlayerHUD* playerHUD;
 
+	// Boolean if inventory is toggled on or not
+	bool bIsInventoryTogggled = true;
+
+	// Card image png for inventory
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UTexture2D* cardInventoryImg;
+
 };
