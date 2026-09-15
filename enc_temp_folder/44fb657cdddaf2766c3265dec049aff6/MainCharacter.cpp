@@ -6,6 +6,7 @@
 #include "CardActor.h"
 #include "PlayerChairSlot.h"
 #include "PlayerHUD.h"
+#include "Components/Image.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -283,6 +284,13 @@ void AMainCharacter::Throw()
 		ACardActor* nextEquippedCard;
 		nextEquippedCard = cardsInInventory[equippedCardPos];
 		if (nextEquippedCard) EquipCard(nextEquippedCard);
+		return;
+	}
+	
+	// If inventory is empty, remove card image from inventory ui
+	if (gameModeBase && gameModeBase->playerHUD)
+	{
+		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 0);
 	}
 
 }
@@ -415,6 +423,16 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		UnequipCard(equippedCard);
 	}
 
+	// If inventory is empty, change inventory image to card img
+	if (cardsInInventory.Num() == 0)
+	{
+		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->playerHUD->inventoryImage1)
+		{
+			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 0.0f);
+		}
+
+	}
+
 	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
 	if (!bIsInventoryTogggled)
@@ -486,12 +504,12 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 	FVector cameraLocation = playerCamera->GetComponentLocation();
 
 	// Draw the line trace and check what was hit
-	/*DrawDebugLine
+	DrawDebugLine
 	(
 		gameModeBase->playerWorld,
 		cameraLocation + (forwardVector * FVector(lineTraceStartOffset, lineTraceStartOffset, lineTraceStartOffset)),
 		cameraLocation + forwardVector * FVector(lineTraceLength, lineTraceLength, lineTraceLength),
-		FColor::Cyan, true, 5.0);*/
+		FColor::Cyan, true, 5.0);
 
 	// Line trace to see if the player is looking directly at something that they can interact with
 	gameModeBase->playerWorld->LineTraceSingleByChannel

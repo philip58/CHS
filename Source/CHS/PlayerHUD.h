@@ -19,7 +19,7 @@ public:
     void SetInteractPopupText(const FString& name);
 
     UFUNCTION(BlueprintCallable)
-    void SetInventoryImage(UImage* currInventoryImage, UImage* newInventoryImage, const float& opacity);
+    void SetInventoryImage(UImage* currInventoryImage, UTexture2D* newInventoryImage, const float& opacity);
 
     /* --- Variables --- */
     // HUD popup text 

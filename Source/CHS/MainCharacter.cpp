@@ -290,7 +290,7 @@ void AMainCharacter::Throw()
 	// If inventory is empty, remove card image from inventory ui
 	if (gameModeBase && gameModeBase->playerHUD)
 	{
-		gameModeBase->playerHUD->SetInventoryImage(playerHUD->inventoryImage1, cardInventoryImg, 0);
+		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 0.0);
 	}
 
 }
@@ -426,9 +426,9 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	// If inventory is empty, change inventory image to card img
 	if (cardsInInventory.Num() == 0)
 	{
-		if (gameModeBase && gameModeBase->playerHUD)
+		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->playerHUD->inventoryImage1)
 		{
-			gameModeBase->playerHUD->SetInventoryImage(playerHUD->inventoryImage1, cardInventoryImg, 1.0f);
+			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 1.0f);
 		}
 
 	}

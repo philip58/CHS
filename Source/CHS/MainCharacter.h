@@ -11,7 +11,6 @@
 class ACardActor;
 class APlayerChairSlot;
 class UPlayerHUD;
-class UImage;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -195,6 +194,6 @@ private:
 
 	// Card image png for inventory
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
-	UImage* cardInventoryImg;
+	UTexture2D* cardInventoryImg;
 
 };

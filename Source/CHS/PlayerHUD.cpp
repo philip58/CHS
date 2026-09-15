@@ -14,12 +14,12 @@ void UPlayerHUD::SetInteractPopupText(const FString& text)
 }
 
 // Set given inventory slot image to inputted image
-void UPlayerHUD::SetInventoryImage(UImage* currInventoryImage, UImage* newInventoryImage, const float& opacity)
+void UPlayerHUD::SetInventoryImage(UImage* currInventoryImage, UTexture2D* newInventoryImage, const float& opacity)
 {
     if (currInventoryImage)
     {
-        currInventoryImage = newInventoryImage;
-        newInventoryImage->SetOpacity(opacity);
+        currInventoryImage->SetBrushFromTexture(newInventoryImage);
+        currInventoryImage->SetOpacity(opacity);
     }
 }
 
