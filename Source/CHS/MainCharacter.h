@@ -77,7 +77,7 @@ public:
 	void ScrollDown();
 
 	// Toggle inventory, hide/unhide equipped card
-	void ToggleInventory();
+	void ToggleCardHide(bool bHide);
 
 	//Interact with actor/card
 	void InteractWithCard(AActor* interactedActor);
@@ -112,6 +112,12 @@ private:
 
 	// Handle loggic while hovering over a chair
 	void ChairHover(AActor* hoveredActor);
+
+	// Increment through the cards up or down
+	void IncrementThroughCards(const int& increment);
+
+	// Increment through inventory up or down
+	void IncrementThroughInventory(const int& increment);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
@@ -189,8 +195,8 @@ private:
 	// Player HUD
 	UPlayerHUD* playerHUD;
 
-	// Boolean if inventory is toggled on or not
-	bool bIsInventoryTogggled = true;
+	// Boolean if card is hidden or not
+	bool bIsCardVisible = true;
 
 	// Card image png for inventory
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
@@ -227,5 +233,11 @@ private:
 	// Opacity (RBGA) in the inventory slot background
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
 	float aSelectedColorInventorySlot = .6f;
+
+	// Inventory size
+	int inventorySize = 0;
+
+	// Inventory position
+	int inventoryPos = 0;
 
 };

@@ -7,6 +7,7 @@
 #include "PlayerChairSlot.h"
 #include "PlayerHUD.h"
 #include "Components/Image.h"
+#include "Components/Border.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -103,7 +104,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
 	playerInputComponent->BindAction("ScrollUp", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollUp);
 	playerInputComponent->BindAction("ScrollDown", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollDown);
-	playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
+	//playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
 }
 
 // Move the player forward
@@ -287,12 +288,12 @@ void AMainCharacter::Throw()
 	}
 	
 	// If inventory is empty, remove card image from inventory ui
-	if (gameModeBase && gameModeBase->playerHUD)
+	if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
 	{
-		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 0.0);
+		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], cardInventoryImg, 0.0);
 		gameModeBase->playerHUD->SetInventorySlotColor
 		(
-			gameModeBase->playerHUD->inventorySlot1, 
+			gameModeBase->inventorySlotArray[inventoryPos],
 			rDefaultColorInventorySlot, 
 			gDefaultColorInventorySlot,
 			bDefaultColorInventorySlot,
@@ -305,88 +306,37 @@ void AMainCharacter::Throw()
 // When the player scrolls up, iterate positively through the inventory
 void AMainCharacter::ScrollUp()
 {
-	if (cardsInInventory.IsEmpty())
-	{
-		return;
-	}
-
-	if(!equippedCard)
-	{
-		return;
-	}
-	
-	int tempPos;
-
-	if (equippedCardPos == (cardsInInventory.Num() - 1))
-	{
-		tempPos = 0;
-		equippedCardPos = 0;
-	}
-	else
-	{
-		++equippedCardPos;
-		tempPos = equippedCardPos;
-	}
-	
-	UnequipCard(equippedCard);
-	equippedCard->UnequipCard();
-	EquipCard(cardsInInventory[tempPos]);
+	IncrementThroughInventory(1);
+	//IncrementThroughCards(1);
 }
 
 // When the player scrolls up, iterate negatively through the inventory
 void AMainCharacter::ScrollDown()
 {
-	if (cardsInInventory.IsEmpty())
-	{
-		return;
-	}
-
-	if (!equippedCard)
-	{
-		return;
-	}
-
-	int tempPos;
-
-	if (equippedCardPos == 0)
-	{
-		tempPos = cardsInInventory.Num() - 1;
-		equippedCardPos = cardsInInventory.Num() - 1;
-	}
-	else
-	{
-		--equippedCardPos;
-		tempPos = equippedCardPos;
-	}
-
-	UnequipCard(equippedCard);
-	equippedCard->UnequipCard();
-	EquipCard(cardsInInventory[tempPos]);
-	
+	IncrementThroughInventory(-1);
+	//IncrementThroughCards(-1);
 }
 
-// Hide/unhide inventory on press of Tab key
-void AMainCharacter::ToggleInventory()
+// Hide/unhide card from hand, if bool is true then we hide otherwise equip
+void AMainCharacter::ToggleCardHide(bool bHide)
 {
-	// Deal with toggling inventory on/off
-	if (equippedCard)
+	// Deal with toggling card hide on/off
+	if (bHide && equippedCard)
 	{
-		// If card is equipped, toggle off inventory and unequip card
+		// If card is equipped, toggle off card hide 
 		UnequipCard(equippedCard);
 		equippedCard = nullptr;
-		bIsInventoryTogggled = false;
+		bIsCardVisible = false;
 		return;
 	}
-	else if (cardsInInventory.Num() != 0)
+	else if(!bHide && cardsInInventory.Num() > 0)
 	{
-		// If card is not equipped, and invetory is not empty toggle on inventory and equip last picked up card
+		// If card is not equipped, and inventory is not empty toggle on inventory and equip last picked up card
 		EquipCard(cardsInInventory[equippedCardPos]);
-		bIsInventoryTogggled = true;
+		bIsCardVisible = true;
 		return;
 	}
 
-	// If none of the above apply (inventory is empty), negate inventory toggled boolean
-	bIsInventoryTogggled = !bIsInventoryTogggled;
 }
 
 // Handle the card equipping logic and maintain relevant variables, current equipped card, and equipped card position
@@ -433,12 +383,12 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	// If inventory is empty, change inventory image to card img
 	if (cardsInInventory.Num() == 0)
 	{
-		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->playerHUD->inventoryImage1)
+		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
 		{
-			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 1.0f);
+			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
 			gameModeBase->playerHUD->SetInventorySlotColor
 			(
-				gameModeBase->playerHUD->inventorySlot1,
+				gameModeBase->inventorySlotArray[inventoryPos],
 				rSelectedColorInventorySlot,
 				gSelectedColorInventorySlot,
 				bSelectedColorInventorySlot,
@@ -450,7 +400,7 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 
 	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
-	if (!bIsInventoryTogggled)
+	if (!bIsCardVisible)
 	{
 		UnequipCard(equippedCard);
 		equippedCard = nullptr;
@@ -599,4 +549,126 @@ void AMainCharacter::ChairHover(AActor* hoveredActor)
 	// Get chair from actor
 	APlayerChairSlot* chair;
 	chair = Cast<APlayerChairSlot>(hoveredActor);
+}
+
+// Increment through the cards up or down depending on int (-1 or 1)
+void AMainCharacter::IncrementThroughCards(const int& increment)
+{
+	// Return if no cards in inventory
+	if (cardsInInventory.IsEmpty())
+	{
+		return;
+	}
+
+	// Return if there is no equipped card
+	if (!equippedCard)
+	{
+		return;
+	}
+
+	// Depending on if decrementing or incrementing, determine next card inventory position
+	int tempPos;
+	if (increment > 0)
+	{
+		// Increment
+		if (equippedCardPos == (cardsInInventory.Num() - 1))
+		{
+			tempPos = 0;
+			equippedCardPos = 0;
+		}
+		else
+		{
+			++equippedCardPos;
+			tempPos = equippedCardPos;
+		}
+	}
+	else if (increment < 0)
+	{
+		// Decrement
+		if (equippedCardPos == 0)
+		{
+			tempPos = cardsInInventory.Num() - 1;
+			equippedCardPos = cardsInInventory.Num() - 1;
+		}
+		else
+		{
+			--equippedCardPos;
+			tempPos = equippedCardPos;
+		}
+	}
+
+	// Equip next card
+	UnequipCard(equippedCard);
+	equippedCard->UnequipCard();
+	EquipCard(cardsInInventory[tempPos]);
+}
+
+// Increment through the inventory up or down depending on int (-1 or 1)
+void AMainCharacter::IncrementThroughInventory(const int& increment)
+{
+	// Return if HUD does not exist or if any inventory array is empty
+	if (!IsValid(gameModeBase->playerHUD) || gameModeBase->inventoryImageArray.Num() <= 0 || gameModeBase->inventorySlotArray.Num() <= 0 )
+	{
+		return;
+	}
+
+	// Depending on if decrementing or incrementing, determine next inventory position
+	int tempPos;
+	if (increment > 0)
+	{
+		// Increment
+		if (inventoryPos == (gameModeBase->inventorySlotArray.Num() - 1))
+		{
+			tempPos = 0;
+		}
+		else
+		{
+			tempPos = inventoryPos + 1;
+		}
+	}
+	else if (increment < 0)
+	{
+		// Decrement
+		if (inventoryPos == 0)
+		{
+			tempPos = gameModeBase->inventorySlotArray.Num() - 1;
+		}
+		else
+		{
+			tempPos = inventoryPos - 1;
+		}
+	}
+
+	// Set inventory slot/image attributes for old/new positions
+	gameModeBase->playerHUD->SetInventorySlotColor
+	(
+		gameModeBase->inventorySlotArray[inventoryPos], 
+		rDefaultColorInventorySlot, 
+		gDefaultColorInventorySlot, 
+		bDefaultColorInventorySlot, 
+		aDefaultColorInventorySlot
+	);
+	gameModeBase->playerHUD->SetInventorySlotColor
+	(
+		gameModeBase->inventorySlotArray[tempPos],
+		rSelectedColorInventorySlot,
+		gSelectedColorInventorySlot,
+		bSelectedColorInventorySlot,
+		aSelectedColorInventorySlot
+	);
+
+	inventoryPos = tempPos;
+
+	// Toggle hiding card if we move onto or away from the inventory slot holding the card
+	UObject* object = gameModeBase->inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject();
+	UTexture2D* texture = Cast<UTexture2D>(object);
+	if (texture && gameModeBase->inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject() == cardInventoryImg)
+	{
+		ToggleCardHide(false);
+	}
+	else
+	{
+		ToggleCardHide(true);
+	}
+
 }

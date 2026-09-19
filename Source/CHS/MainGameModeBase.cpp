@@ -49,6 +49,21 @@ void AMainGameModeBase::BeginPlay()
 	if (playerHUD)
 	{
 		playerHUD->AddToViewport();
+	    
+		// Add inventory widgets to arrays
+		inventoryImageArray.Push(playerHUD->inventoryImage1);
+		inventoryImageArray.Push(playerHUD->inventoryImage2);
+		inventoryImageArray.Push(playerHUD->inventoryImage3);
+		inventoryImageArray.Push(playerHUD->inventoryImage4);
+		inventoryImageArray.Push(playerHUD->inventoryImage5);
+		inventoryImageArray.Push(playerHUD->inventoryImage6);
+		inventorySlotArray.Push(playerHUD->inventorySlot1);
+		inventorySlotArray.Push(playerHUD->inventorySlot2);
+		inventorySlotArray.Push(playerHUD->inventorySlot3);
+		inventorySlotArray.Push(playerHUD->inventorySlot4);
+		inventorySlotArray.Push(playerHUD->inventorySlot5);
+		inventorySlotArray.Push(playerHUD->inventorySlot6);
 	}
+
 
 }
