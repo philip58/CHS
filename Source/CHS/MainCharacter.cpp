@@ -290,7 +290,7 @@ void AMainCharacter::Throw()
 	// If inventory is empty, remove card image from inventory ui
 	if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
 	{
-		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], cardInventoryImg, 0.0);
+		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
 		gameModeBase->playerHUD->SetInventorySlotColor
 		(
 			gameModeBase->inventorySlotArray[inventoryPos],

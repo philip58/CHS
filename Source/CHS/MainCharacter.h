@@ -202,6 +202,10 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
 	UTexture2D* cardInventoryImg;
 
+	// Blank image png for clearing inventory img
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UTexture2D* blankInventoryImg;
+
 	// Red (RBGA) color in the inventory slot background
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
 	float rDefaultColorInventorySlot = .015f;
