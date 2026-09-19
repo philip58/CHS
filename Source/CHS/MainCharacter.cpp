@@ -249,7 +249,6 @@ void AMainCharacter::Throw()
 	boxComp = equippedCard->cardBoxCollision;
 	if (!boxComp)
 	{
-		UE_LOG(LogTemp, Display, TEXT("No card collision found"));
 		return;
 	}
 
@@ -291,6 +290,14 @@ void AMainCharacter::Throw()
 	if (gameModeBase && gameModeBase->playerHUD)
 	{
 		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 0.0);
+		gameModeBase->playerHUD->SetInventorySlotColor
+		(
+			gameModeBase->playerHUD->inventorySlot1, 
+			rDefaultColorInventorySlot, 
+			gDefaultColorInventorySlot,
+			bDefaultColorInventorySlot,
+			aDefaultColorInventorySlot
+		);
 	}
 
 }
@@ -429,6 +436,14 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->playerHUD->inventoryImage1)
 		{
 			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->playerHUD->inventoryImage1, cardInventoryImg, 1.0f);
+			gameModeBase->playerHUD->SetInventorySlotColor
+			(
+				gameModeBase->playerHUD->inventorySlot1,
+				rSelectedColorInventorySlot,
+				gSelectedColorInventorySlot,
+				bSelectedColorInventorySlot,
+				aSelectedColorInventorySlot
+			);
 		}
 
 	}
@@ -576,7 +591,6 @@ void AMainCharacter::CardHover(AActor* hoveredActor)
 	// Get chair from actor
 	ACardActor* card;
 	card = Cast<ACardActor>(hoveredActor);
-	UE_LOG(LogTemp, Display, TEXT("Hovered over card"));
 }
 
 // Handle loggic while hovering over a chair
@@ -585,5 +599,4 @@ void AMainCharacter::ChairHover(AActor* hoveredActor)
 	// Get chair from actor
 	APlayerChairSlot* chair;
 	chair = Cast<APlayerChairSlot>(hoveredActor);
-	UE_LOG(LogTemp, Display, TEXT("Hovered over chair"));
 }

@@ -196,4 +196,36 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
 	UTexture2D* cardInventoryImg;
 
+	// Red (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float rDefaultColorInventorySlot = .015f;
+
+	// Green (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float gDefaultColorInventorySlot = .015f;
+
+	// Blue (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float bDefaultColorInventorySlot = .015f;
+
+	// Opacity (RBGA) in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float aDefaultColorInventorySlot = .2f;
+
+	// Red (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float rSelectedColorInventorySlot = 1.0f;
+
+	// Green (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float gSelectedColorInventorySlot = 1.0f;
+
+	// Blue (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float bSelectedColorInventorySlot = 1.0f;
+
+	// Opacity (RBGA) in the inventory slot background
+	UPROPERTY(EditDefaultsOnly)
+	float aSelectedColorInventorySlot = .4f;
+
 };
