@@ -569,7 +569,7 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
 		CardHover(hoveredActor);
-		gameModeBase->playerHUD->SetInteractPopupText("Press E to Interact");
+		gameModeBase->playerHUD->SetInteractPopupText("Press E To Pick Up");
 		return;
 	}
 
@@ -577,7 +577,7 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
 	{
 		ChairHover(hoveredActor);
-		gameModeBase->playerHUD->SetInteractPopupText("Press E to Interact");
+		gameModeBase->playerHUD->SetInteractPopupText("Press E To Sit");
 		return;
 	}
 
