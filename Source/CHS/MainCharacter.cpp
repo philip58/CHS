@@ -96,7 +96,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAxis("LookHorizontally", this, &AMainCharacter::LookHorizontally);
 	playerInputComponent->BindAxis("LookVertically", this, &AMainCharacter::LookVertically);
 
-	// Bind action mappings (jump, sprint, interact, throw, scroll up/down, toggle inventory)
+	// Bind action mappings (jump, sprint, interact, throw, scroll up/down, toggle inventory, navigate through inventory slots 1-6)
 	playerInputComponent->BindAction("Jump", EInputEvent::IE_Pressed, this, &AMainCharacter::PlayerJump);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Pressed, this, &AMainCharacter::StartSprinting);
 	playerInputComponent->BindAction("Sprint", EInputEvent::IE_Released, this, &AMainCharacter::StopSprinting);
@@ -104,6 +104,12 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("Throw", EInputEvent::IE_Released, this, &AMainCharacter::Throw);
 	playerInputComponent->BindAction("ScrollUp", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollUp);
 	playerInputComponent->BindAction("ScrollDown", EInputEvent::IE_Pressed, this, &AMainCharacter::ScrollDown);
+	playerInputComponent->BindAction("SelectInventorySlot1", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot1);
+	playerInputComponent->BindAction("SelectInventorySlot2", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot2);
+	playerInputComponent->BindAction("SelectInventorySlot3", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot3);
+	playerInputComponent->BindAction("SelectInventorySlot4", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot4);
+	playerInputComponent->BindAction("SelectInventorySlot5", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot5);
+	playerInputComponent->BindAction("SelectInventorySlot6", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot6);
 	//playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
 }
 
@@ -639,25 +645,82 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 		}
 	}
 
+	// Highlight next slot and unhighlight previous
+	HighlightSelectedInventorySlot(tempPos);
+
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot1()
+{
+	NavigateToSelectedInventorySlot(0);
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot2()
+{
+	NavigateToSelectedInventorySlot(1);
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot3()
+{
+	NavigateToSelectedInventorySlot(2);
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot4()
+{
+	NavigateToSelectedInventorySlot(3);
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot5()
+{
+	NavigateToSelectedInventorySlot(4);
+}
+
+// Pass the selected inventory slot 
+void AMainCharacter::SelectInventorySlot6()
+{
+	NavigateToSelectedInventorySlot(5);
+}
+
+// Navigate to the selected inventory slot
+void AMainCharacter::NavigateToSelectedInventorySlot(int inventorySlotNumber)
+{
+	// Return if HUD does not exist or if any inventory array is empty
+	if (!IsValid(gameModeBase->playerHUD) || gameModeBase->inventoryImageArray.Num() <= 0 || gameModeBase->inventorySlotArray.Num() <= 0)
+	{
+		return;
+	}
+
+	// Highlight next slot and unhighlight previous
+	HighlightSelectedInventorySlot(inventorySlotNumber);
+}
+
+// Highlight inventory slot we navigate to and unhighlight previous
+void AMainCharacter::HighlightSelectedInventorySlot(int inventorySlot)
+{
 	// Set inventory slot/image attributes for old/new positions
 	gameModeBase->playerHUD->SetInventorySlotColor
 	(
-		gameModeBase->inventorySlotArray[inventoryPos], 
-		rDefaultColorInventorySlot, 
-		gDefaultColorInventorySlot, 
-		bDefaultColorInventorySlot, 
+		gameModeBase->inventorySlotArray[inventoryPos],
+		rDefaultColorInventorySlot,
+		gDefaultColorInventorySlot,
+		bDefaultColorInventorySlot,
 		aDefaultColorInventorySlot
 	);
 	gameModeBase->playerHUD->SetInventorySlotColor
 	(
-		gameModeBase->inventorySlotArray[tempPos],
+		gameModeBase->inventorySlotArray[inventorySlot],
 		rSelectedColorInventorySlot,
 		gSelectedColorInventorySlot,
 		bSelectedColorInventorySlot,
 		aSelectedColorInventorySlot
 	);
 
-	inventoryPos = tempPos;
+	inventoryPos = inventorySlot;
 
 	// Toggle hiding card if we move onto or away from the inventory slot holding the card
 	UObject* object = gameModeBase->inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject();
@@ -670,5 +733,4 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 	{
 		ToggleCardHide(true);
 	}
-
 }

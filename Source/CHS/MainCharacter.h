@@ -119,6 +119,30 @@ private:
 	// Increment through inventory up or down
 	void IncrementThroughInventory(const int& increment);
 
+	// Pass the selected inventory slot 
+	void SelectInventorySlot1();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot2();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot3();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot4();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot5();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot6();
+
+	// Navigate to the selected inventory slot
+	void NavigateToSelectedInventorySlot(int inventorySlotNumber);
+
+	// Highlight inventory slot we navigate to and unhighlight previous
+	void HighlightSelectedInventorySlot(int inventorySlot);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
