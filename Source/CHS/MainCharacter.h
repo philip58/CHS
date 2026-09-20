@@ -77,7 +77,7 @@ public:
 	void ScrollDown();
 
 	// Toggle inventory, hide/unhide equipped card
-	void ToggleInventory();
+	void ToggleCardHide(bool bHide);
 
 	//Interact with actor/card
 	void InteractWithCard(AActor* interactedActor);
@@ -112,6 +112,36 @@ private:
 
 	// Handle loggic while hovering over a chair
 	void ChairHover(AActor* hoveredActor);
+
+	// Increment through the cards up or down
+	void IncrementThroughCards(const int& increment);
+
+	// Increment through inventory up or down
+	void IncrementThroughInventory(const int& increment);
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot1();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot2();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot3();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot4();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot5();
+
+	// Pass the selected inventory slot 
+	void SelectInventorySlot6();
+
+	// Navigate to the selected inventory slot
+	void NavigateToSelectedInventorySlot(int inventorySlotNumber);
+
+	// Highlight inventory slot we navigate to and unhighlight previous
+	void HighlightSelectedInventorySlot(int inventorySlot);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
@@ -189,11 +219,53 @@ private:
 	// Player HUD
 	UPlayerHUD* playerHUD;
 
-	// Boolean if inventory is toggled on or not
-	bool bIsInventoryTogggled = true;
+	// Boolean if card is hidden or not
+	bool bIsCardVisible = true;
 
 	// Card image png for inventory
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
 	UTexture2D* cardInventoryImg;
+
+	// Blank image png for clearing inventory img
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UTexture2D* blankInventoryImg;
+
+	// Red (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float rDefaultColorInventorySlot = .015f;
+
+	// Green (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float gDefaultColorInventorySlot = .015f;
+
+	// Blue (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float bDefaultColorInventorySlot = .015f;
+
+	// Opacity (RBGA) in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float aDefaultColorInventorySlot = .2f;
+
+	// Red (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float rSelectedColorInventorySlot = 1.0f;
+
+	// Green (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float gSelectedColorInventorySlot = 1.0f;
+
+	// Blue (RBGA) color in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float bSelectedColorInventorySlot = 1.0f;
+
+	// Opacity (RBGA) in the inventory slot background
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float aSelectedColorInventorySlot = .6f;
+
+	// Inventory size
+	int inventorySize = 0;
+
+	// Inventory position
+	int inventoryPos = 0;
 
 };

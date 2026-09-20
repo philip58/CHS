@@ -8,6 +8,8 @@
 #include "MainGameModeBase.generated.h"
 
 class UPlayerHUD;
+class UImage;
+class UBorder;
 
 /**
  * 
@@ -45,4 +47,10 @@ public:
 	// Class object of UPlayerHUD
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPlayerHUD> playerHUDClass;
+
+	// Array of inventory images
+	TArray<TObjectPtr<UImage>> inventoryImageArray;
+
+	// Array of inventory slots
+	TArray<TObjectPtr<UBorder>> inventorySlotArray;
 };
