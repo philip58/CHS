@@ -23,7 +23,6 @@ ACardActor::ACardActor()
 	//cardBoxCollision->SetupAttachment(RootComponent);
 	cardBoxCollision->SetRelativeScale3D( FVector(0.05,1.5625,2.2125) );
 
-
 	this->SetRootComponent(cardBoxCollision);
 	cardMesh->SetupAttachment(RootComponent);
 
@@ -84,9 +83,8 @@ void ACardActor::UnequipCard()
 	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
-
 // Set is equipped boolean
-void ACardActor::SetIsCardEquipped(bool isEquipped)
+void ACardActor::SetIsCardEquipped(const bool& isEquipped)
 {
 	bIsCardEquipped = isEquipped;
 }
@@ -110,13 +108,25 @@ void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	AActor* compActor = OtherComp->GetOwner();
 	if (compActor && compActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		this->SetActorRelativeRotation(FRotator(90, 0, 0));
-		this->SetActorLocation(compActor->GetActorLocation() + FVector(0,0, tableSlotVertOffset));
-		cardBoxCollision->SetSimulatePhysics(false);
-		cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		PlaceCardInTableSlot(compActor);
 	}
 
 }
 
+void ACardActor::PlaceCardInTableSlot(AActor* actor)
+{
+	this->SetActorRelativeRotation(actor->GetActorRotation() + FRotator(180, 0, 0));
+	this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset));
+	cardBoxCollision->SetSimulatePhysics(false);
+	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+}
 
+// Set cards new mesh
+void ACardActor::SetCardMesh(UStaticMesh* newCardMesh)
+{
+	if (cardMesh && newCardMesh)
+	{
+		cardMesh->SetStaticMesh(newCardMesh);
+	}
+}
 

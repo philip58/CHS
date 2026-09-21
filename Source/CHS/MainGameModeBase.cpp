@@ -3,6 +3,7 @@
 
 #include "MainGameModeBase.h"
 #include "PlayerHUD.h"
+#include "CardActor.h"
 #include "GameFramework/Character.h"
 
 // Class constructor
@@ -51,19 +52,133 @@ void AMainGameModeBase::BeginPlay()
 		playerHUD->AddToViewport();
 	    
 		// Add inventory widgets to arrays
-		inventoryImageArray.Push(playerHUD->inventoryImage1);
-		inventoryImageArray.Push(playerHUD->inventoryImage2);
-		inventoryImageArray.Push(playerHUD->inventoryImage3);
-		inventoryImageArray.Push(playerHUD->inventoryImage4);
-		inventoryImageArray.Push(playerHUD->inventoryImage5);
-		inventoryImageArray.Push(playerHUD->inventoryImage6);
-		inventorySlotArray.Push(playerHUD->inventorySlot1);
-		inventorySlotArray.Push(playerHUD->inventorySlot2);
-		inventorySlotArray.Push(playerHUD->inventorySlot3);
-		inventorySlotArray.Push(playerHUD->inventorySlot4);
-		inventorySlotArray.Push(playerHUD->inventorySlot5);
-		inventorySlotArray.Push(playerHUD->inventorySlot6);
+		PopulateInventoryImageSlotArray();
 	}
 
+    PopulateDeck();
+
+}
+
+// Add inventory widgets to arrays
+void AMainGameModeBase::PopulateInventoryImageSlotArray()
+{
+	inventoryImageArray.Push(playerHUD->inventoryImage1);
+	inventoryImageArray.Push(playerHUD->inventoryImage2);
+	inventoryImageArray.Push(playerHUD->inventoryImage3);
+	inventoryImageArray.Push(playerHUD->inventoryImage4);
+	inventoryImageArray.Push(playerHUD->inventoryImage5);
+	inventoryImageArray.Push(playerHUD->inventoryImage6);
+	inventorySlotArray.Push(playerHUD->inventorySlot1);
+	inventorySlotArray.Push(playerHUD->inventorySlot2);
+	inventorySlotArray.Push(playerHUD->inventorySlot3);
+	inventorySlotArray.Push(playerHUD->inventorySlot4);
+	inventorySlotArray.Push(playerHUD->inventorySlot5);
+	inventorySlotArray.Push(playerHUD->inventorySlot6);
+}
+
+// Add cards to deck array
+void AMainGameModeBase::PopulateDeck()
+{
+    // Clear array
+    cardDeck.Empty();
+
+	// Spawn hearts
+	SpawnAndAddCard(cardAceHeartsMesh);
+	SpawnAndAddCard(cardTwoHeartsMesh);
+	SpawnAndAddCard(cardThreeHeartsMesh);
+	SpawnAndAddCard(cardFourHeartsMesh);
+	SpawnAndAddCard(cardFiveHeartsMesh);
+	SpawnAndAddCard(cardSixHeartsMesh);
+	SpawnAndAddCard(cardSevenHeartsMesh);
+	SpawnAndAddCard(cardEightHeartsMesh);
+	SpawnAndAddCard(cardNineHeartsMesh);
+	SpawnAndAddCard(cardTenHeartsMesh);
+	SpawnAndAddCard(cardJackHeartsMesh);
+	SpawnAndAddCard(cardQueenHeartsMesh);
+	SpawnAndAddCard(cardKingHeartsMesh);
+
+	// Spawn diamonds
+	SpawnAndAddCard(cardAceDiamondsMesh);
+	SpawnAndAddCard(cardTwoDiamondsMesh);
+	SpawnAndAddCard(cardThreeDiamondsMesh);
+	SpawnAndAddCard(cardFourDiamondsMesh);
+	SpawnAndAddCard(cardFiveDiamondsMesh);
+	SpawnAndAddCard(cardSixDiamondsMesh);
+	SpawnAndAddCard(cardSevenDiamondsMesh);
+	SpawnAndAddCard(cardEightDiamondsMesh);
+	SpawnAndAddCard(cardNineDiamondsMesh);
+	SpawnAndAddCard(cardTenDiamondsMesh);
+	SpawnAndAddCard(cardJackDiamondsMesh);
+	SpawnAndAddCard(cardQueenDiamondsMesh);
+	SpawnAndAddCard(cardKingDiamondsMesh);
+
+	// Spawn clubs
+	SpawnAndAddCard(cardAceClubsMesh);
+	SpawnAndAddCard(cardTwoClubsMesh);
+	SpawnAndAddCard(cardThreeClubsMesh);
+	SpawnAndAddCard(cardFourClubsMesh);
+	SpawnAndAddCard(cardFiveClubsMesh);
+	SpawnAndAddCard(cardSixClubsMesh);
+	SpawnAndAddCard(cardSevenClubsMesh);
+	SpawnAndAddCard(cardEightClubsMesh);
+	SpawnAndAddCard(cardNineClubsMesh);
+	SpawnAndAddCard(cardTenClubsMesh);
+	SpawnAndAddCard(cardJackClubsMesh);
+	SpawnAndAddCard(cardQueenClubsMesh);
+	SpawnAndAddCard(cardKingClubsMesh);
+
+	// Spawn spades
+	SpawnAndAddCard(cardAceSpadesMesh);
+	SpawnAndAddCard(cardTwoSpadesMesh);
+	SpawnAndAddCard(cardThreeSpadesMesh);
+	SpawnAndAddCard(cardFourSpadesMesh);
+	SpawnAndAddCard(cardFiveSpadesMesh);
+	SpawnAndAddCard(cardSixSpadesMesh);
+	SpawnAndAddCard(cardSevenSpadesMesh);
+	SpawnAndAddCard(cardEightSpadesMesh);
+	SpawnAndAddCard(cardNineSpadesMesh);
+	SpawnAndAddCard(cardTenSpadesMesh);
+	SpawnAndAddCard(cardJackSpadesMesh);
+	SpawnAndAddCard(cardQueenSpadesMesh);
+	SpawnAndAddCard(cardKingSpadesMesh);
+
+	// Spawn Jokers
+	SpawnAndAddCard(cardRedJokerMesh);
+	SpawnAndAddCard(cardBlackJokerMesh);
+}
+
+void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh)
+{
+    // If no player world or card mesh return
+    if (!playerWorld || !cardMesh || !mainCharacter)
+    {
+        return;
+    }
+
+	// Spawn the card
+	spawnOffsetCounter += 20;
+    FActorSpawnParameters spawnParams;
+    ACardActor* newCard;
+	FTransform transform = FTransform::Identity;
+	transform.SetLocation(mainCharacter->GetActorLocation() + FVector( spawnOffsetCounter - 600, -400, 0));
+    spawnParams.Owner = this;
+	
+	newCard = playerWorld->SpawnActor<ACardActor>(cardActorClass, transform, spawnParams);
+
+	if (!newCard)
+	{
+		return;
+	}
+
+	// Set card new mesh and push to deck array
+	newCard->SetCardMesh(cardMesh);
+	//newCard->SetActorRelativeScale3D(FVector(0.005000, 0.350000, 0.450000));
+	//newCard->cardMesh->SetRelativeScale3D(FVector(0.600000, 0.600000, 0.452500));
+	cardDeck.Push(newCard);
+
+}
+
+void AMainGameModeBase::SpawnCardActor()
+{
 
 }
