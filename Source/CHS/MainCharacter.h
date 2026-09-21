@@ -143,6 +143,9 @@ private:
 	// Highlight inventory slot we navigate to and unhighlight previous
 	void HighlightSelectedInventorySlot(int inventorySlot);
 
+	// Unequip currently equipped card and remove from inventory
+	void UnequipAndRemoveCard();
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")

@@ -8,6 +8,7 @@
 #include "PlayerHUD.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "CardTableSlot.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -234,12 +235,23 @@ void AMainCharacter::Interact()
 	{
 		InteractWithCard(hitActor);
 	}
+	// If card is equipped and the hit actor is a table card slot, place the card
+	else if (equippedCard != nullptr && hitActor->IsA(ACardTableSlot::StaticClass()))
+	{
+		//ACardActor* tempCard = equippedCard;
+		//UnequipAndRemoveCard();
+		//tempCard->SetIsCardEquipped(false);
+		//tempCard->UnequipCard();
+		//tempCard->PlaceCardInTableSlot(hitActor);
+	}
 	
 	// If the hit actor is a chair, call the chair interaction method
 	if (hitActor->IsA(APlayerChairSlot::StaticClass()))
 	{
 		InteractWithChair(hitActor);
 	}
+
+
 }
 
 // Throw equipped object ( card )
@@ -270,42 +282,7 @@ void AMainCharacter::Throw()
 		+ FVector(0, 0, throwHeight)
 	);
 
-	// Remove the card from the inventory
-	cardsInInventory.RemoveSingle(equippedCard);
-	
-	if (equippedCardPos == 0)
-	{
-		equippedCardPos = cardsInInventory.Num() - 1;
-	}
-	else
-	{
-		--equippedCardPos;
-	}
-
-	equippedCard = nullptr;
-
-	// If there are more cards in the inventory, equip the next one 
-	if (equippedCardPos >= 0)
-	{
-		ACardActor* nextEquippedCard;
-		nextEquippedCard = cardsInInventory[equippedCardPos];
-		if (nextEquippedCard) EquipCard(nextEquippedCard);
-		return;
-	}
-	
-	// If inventory is empty, remove card image from inventory ui
-	if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
-	{
-		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
-		gameModeBase->playerHUD->SetInventorySlotColor
-		(
-			gameModeBase->inventorySlotArray[inventoryPos],
-			rDefaultColorInventorySlot, 
-			gDefaultColorInventorySlot,
-			bDefaultColorInventorySlot,
-			aDefaultColorInventorySlot
-		);
-	}
+	UnequipAndRemoveCard();
 
 }
 
@@ -524,7 +501,7 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
-		CardHover(hoveredActor);
+		//CardHover(hoveredActor);
 		gameModeBase->playerHUD->SetInteractPopupText("Press E To Pick Up");
 		return;
 	}
@@ -532,30 +509,37 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
 	{
-		ChairHover(hoveredActor);
+		//ChairHover(hoveredActor);
 		gameModeBase->playerHUD->SetInteractPopupText("Press E To Sit");
 		return;
+	}
+
+	// If player is holding a card and the hit actor is a card slot
+	if (equippedCard && hoveredActor->IsA(ACardTableSlot::StaticClass()) )
+	{
+		//gameModeBase->playerHUD->SetInteractPopupText("Press E To Place");
+		//return; 
 	}
 
 	// If nothing is being hovered, clear the interact text
 	gameModeBase->playerHUD->SetInteractPopupText("");
 }
 
-// Handle loggic while hovering over a chair
-void AMainCharacter::CardHover(AActor* hoveredActor)
-{
-	// Get chair from actor
-	ACardActor* card;
-	card = Cast<ACardActor>(hoveredActor);
-}
-
-// Handle loggic while hovering over a chair
-void AMainCharacter::ChairHover(AActor* hoveredActor)
-{
-	// Get chair from actor
-	APlayerChairSlot* chair;
-	chair = Cast<APlayerChairSlot>(hoveredActor);
-}
+//// Handle loggic while hovering over a chair
+//void AMainCharacter::CardHover(AActor* hoveredActor)
+//{
+//	// Get chair from actor
+//	ACardActor* card;
+//	card = Cast<ACardActor>(hoveredActor);
+//}
+//
+//// Handle loggic while hovering over a chair
+//void AMainCharacter::ChairHover(AActor* hoveredActor)
+//{
+//	// Get chair from actor
+//	APlayerChairSlot* chair;
+//	chair = Cast<APlayerChairSlot>(hoveredActor);
+//}
 
 // Increment through the cards up or down depending on int (-1 or 1)
 void AMainCharacter::IncrementThroughCards(const int& increment)
@@ -732,5 +716,46 @@ void AMainCharacter::HighlightSelectedInventorySlot(int inventorySlot)
 	else
 	{
 		ToggleCardHide(true);
+	}
+}
+
+
+// Unequip currently equipped card and remove it from card inventory
+void AMainCharacter::UnequipAndRemoveCard()
+{
+	cardsInInventory.RemoveSingle(equippedCard);
+
+	if (equippedCardPos == 0)
+	{
+		equippedCardPos = cardsInInventory.Num() - 1;
+	}
+	else
+	{
+		--equippedCardPos;
+	}
+
+	equippedCard = nullptr;
+
+	// If there are more cards in the inventory, equip the next one 
+	if (equippedCardPos >= 0)
+	{
+		ACardActor* nextEquippedCard;
+		nextEquippedCard = cardsInInventory[equippedCardPos];
+		if (nextEquippedCard) EquipCard(nextEquippedCard);
+		return;
+	}
+
+	// If inventory is empty, remove card image from inventory ui
+	if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
+	{
+		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
+		gameModeBase->playerHUD->SetInventorySlotColor
+		(
+			gameModeBase->inventorySlotArray[inventoryPos],
+			rDefaultColorInventorySlot,
+			gDefaultColorInventorySlot,
+			bDefaultColorInventorySlot,
+			aDefaultColorInventorySlot
+		);
 	}
 }

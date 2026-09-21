@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+#include "PlayerHUD.h"
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
 #include "Math/Color.h"
-#include "PlayerHUD.h"
 
 // Set interact pop up text to input 
 void UPlayerHUD::SetInteractPopupText(const FString& text)

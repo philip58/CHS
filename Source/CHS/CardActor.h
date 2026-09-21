@@ -49,9 +49,6 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
-	/* --- Enums --- */
-	
-
 	/* --- Methods --- */
 	// Sets default values for this actor's properties
 	ACardActor();
@@ -62,6 +59,18 @@ public:
 	// Equip card
 	void EquipCard(AMainCharacter* playerCharacter);
 
+	// Place the card in the given slot
+	void PlaceCardInTableSlot(AActor* actor);
+
+	// Set is card equipped boolean
+	void SetIsCardEquipped(const bool& isEquipped);
+
+	// Player unequip card
+	void UnequipCard();
+
+	// Set new card mesh
+	void SetCardMesh(UStaticMesh* newCardMesh);
+
 	/* --- Variables --- */
 
 	// Card mesh
@@ -71,13 +80,6 @@ public:
 	// Card box collision
 	UPROPERTY(EditDefaultsOnly, Category = "Card Mesh Properties")
 	UBoxComponent* cardBoxCollision;
-
-	// Set is card equipped boolean
-	void SetIsCardEquipped(bool isEquipped);
-
-	// Player unequip card
-	void UnequipCard();
-
 
 private:
 	/* --- Methods --- */
