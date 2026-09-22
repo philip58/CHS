@@ -11,6 +11,7 @@
 class ACardActor;
 class APlayerChairSlot;
 class UPlayerHUD;
+class AGameStartButton;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -146,6 +147,9 @@ private:
 	// Unequip currently equipped card and remove from inventory
 	void UnequipAndRemoveCard();
 
+	// Handle interacting with the game start button
+	void InteractWithGameStartButton(AActor* actor);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -271,4 +275,6 @@ private:
 	// Inventory position
 	int inventoryPos = 0;
 
+	// Game start button actor
+	AGameStartButton* gameStartButton;
 };

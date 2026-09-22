@@ -4,6 +4,7 @@
 #include "MainGameModeBase.h"
 #include "PlayerHUD.h"
 #include "CardActor.h"
+#include "Components/BoxComponent.h"
 #include "GameFramework/Character.h"
 
 // Class constructor
@@ -146,6 +147,9 @@ void AMainGameModeBase::PopulateDecks()
 	SpawnAndAddCard(cardRedJokerMesh);
 	SpawnAndAddCard(cardBlackJokerMesh);
 
+	// Add a bigger offset to distinguish the two separate decks
+	spawnOffsetCounter += 50;
+
 	// Spawn red cards
 	SpawnAndAddCard(cardZeroRedMesh);
 	SpawnAndAddCard(cardOneRedMesh);
@@ -234,9 +238,11 @@ void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh)
 		return;
 	}
 
-	// Set card new mesh and push to deck array
+	// Set card new mesh and push to deck array, then set physics simulate false
 	newCard->SetCardMesh(cardMesh);
 	cardDeck.Push(newCard);
+	newCard->cardMesh->SetSimulatePhysics(false);
+	newCard->cardBoxCollision->SetSimulatePhysics(false);
 
 }
 

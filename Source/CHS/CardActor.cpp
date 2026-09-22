@@ -3,6 +3,7 @@
 
 #include "CardActor.h"
 #include "CardTableSlot.h"
+#include "Components/BoxComponent.h"
 #include "MainCharacter.h"
 
 // Sets default values

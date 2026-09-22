@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "Components/Border.h"
 #include "CardTableSlot.h"
+#include "GameStartButton.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -251,6 +252,10 @@ void AMainCharacter::Interact()
 		InteractWithChair(hitActor);
 	}
 
+	if (hitActor->IsA(AGameStartButton::StaticClass()))
+	{
+		InteractWithGameStartButton(hitActor);
+	}
 
 }
 
@@ -501,7 +506,6 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
-		//CardHover(hoveredActor);
 		gameModeBase->playerHUD->SetInteractPopupText("Press E To Pick Up");
 		return;
 	}
@@ -509,7 +513,6 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
 	{
-		//ChairHover(hoveredActor);
 		gameModeBase->playerHUD->SetInteractPopupText("Press E To Sit");
 		return;
 	}
@@ -521,25 +524,16 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 		//return; 
 	}
 
+	// If player is hovering over the game start button change the pop up text
+	if (equippedCard && hoveredActor->IsA(AGameStartButton::StaticClass()))
+	{
+		gameModeBase->playerHUD->SetInteractPopupText("Press E To Start Game");
+		return;
+	}
+
 	// If nothing is being hovered, clear the interact text
 	gameModeBase->playerHUD->SetInteractPopupText("");
 }
-
-//// Handle loggic while hovering over a chair
-//void AMainCharacter::CardHover(AActor* hoveredActor)
-//{
-//	// Get chair from actor
-//	ACardActor* card;
-//	card = Cast<ACardActor>(hoveredActor);
-//}
-//
-//// Handle loggic while hovering over a chair
-//void AMainCharacter::ChairHover(AActor* hoveredActor)
-//{
-//	// Get chair from actor
-//	APlayerChairSlot* chair;
-//	chair = Cast<APlayerChairSlot>(hoveredActor);
-//}
 
 // Increment through the cards up or down depending on int (-1 or 1)
 void AMainCharacter::IncrementThroughCards(const int& increment)
@@ -758,4 +752,31 @@ void AMainCharacter::UnequipAndRemoveCard()
 			aDefaultColorInventorySlot
 		);
 	}
+}
+
+// Handle interacting with the game start button
+void AMainCharacter::InteractWithGameStartButton(AActor* actor)
+{
+	if (!gameModeBase || gameModeBase->cardDeck.Num() <= 0)
+	{
+		return;
+	}
+
+	float rand = FMath::RandRange(0, gameModeBase->cardDeck.Num() - 1);
+	rand = FMath::FloorToInt(rand);
+	ACardActor* card = gameModeBase->cardDeck[rand];
+
+	if (!card)
+	{
+		return;
+	}
+
+	UStaticMesh* mesh = card->cardMesh->GetStaticMesh();
+
+	if (!mesh)
+	{
+		return;
+	}
+
+	gameModeBase->SpawnAndAddCard(mesh);
 }
