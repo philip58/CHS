@@ -32,7 +32,7 @@ public:
 	void PopulateInventoryImageSlotArray();
 
 	// Populate cards to deck array
-	void PopulateDeck();
+	void PopulateDecks();
 
 	// Spawn card and add it to deck
 	void SpawnAndAddCard(UStaticMesh* cardMesh);
@@ -69,6 +69,9 @@ public:
 
 	// Array of a deck of cards
 	TArray< TObjectPtr<ACardActor>> cardDeck;
+
+	// Array of a special deck of cards
+	TArray< TObjectPtr<ACardActor>> specialDeck;
 
 	// Card actor class
 	UPROPERTY(EditDefaultsOnly, Category = "Card Class")
@@ -291,6 +294,237 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Jokers")
 	UStaticMesh* cardBlackJokerMesh;
 
+	/* --- End of Card Meshes --- */
+
 	// Counter for offeset of spawning cards
 	int spawnOffsetCounter = 0;
+
+	/* --- Begin of special card meshes --- */
+
+	// Red cards
+	// Card zero of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardZeroRedMesh;
+
+	// Card one of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardOneRedMesh;
+
+	// Card two of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardTwoRedMesh;
+
+	// Card three of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardThreeRedMesh;
+
+	// Card four of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardFourRedMesh;
+
+	// Card five of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardFiveRedMesh;
+
+	// Card six of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardSixRedMesh;
+
+	// Card seven of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardSevenRedMesh;
+
+	// Card eight of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardEightRedMesh;
+
+	// Card nine of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardNineRedMesh;
+
+	// Card skip of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardSkipRedMesh;
+
+	// Card reverse of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardReverseRedMesh;
+
+	// Card draw two of red mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Red")
+	UStaticMesh* cardDrawTwoRedMesh;
+
+
+	// Blue cards
+	// Card zero of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardZeroBlueMesh;
+
+	// Card one of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardOneBlueMesh;
+
+	// Card two of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardTwoBlueMesh;
+
+	// Card three of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardThreeBlueMesh;
+
+	// Card four of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardFourBlueMesh;
+
+	// Card five of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardFiveBlueMesh;
+
+	// Card six of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardSixBlueMesh;
+
+	// Card seven of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardSevenBlueMesh;
+
+	// Card eight of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardEightBlueMesh;
+
+	// Card nine of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardNineBlueMesh;
+
+	// Card skip of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardSkipBlueMesh;
+
+	// Card reverse of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardReverseBlueMesh;
+
+	// Card draw two of blue mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Blue")
+	UStaticMesh* cardDrawTwoBlueMesh;
+
+
+	// Green cards
+	// Card zero of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardZeroGreenMesh;
+
+	// Card one of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardOneGreenMesh;
+
+	// Card two of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardTwoGreenMesh;
+
+	// Card three of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardThreeGreenMesh;
+
+	// Card four of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardFourGreenMesh;
+
+	// Card five of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardFiveGreenMesh;
+
+	// Card six of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardSixGreenMesh;
+
+	// Card seven of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardSevenGreenMesh;
+
+	// Card eight of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardEightGreenMesh;
+
+	// Card nine of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardNineGreenMesh;
+
+	// Card skip of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardSkipGreenMesh;
+
+	// Card reverse of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardReverseGreenMesh;
+
+	// Card draw two of green mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Green")
+	UStaticMesh* cardDrawTwoGreenMesh;
+
+
+	// Yellow cards
+	// Card zero of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardZeroYellowMesh;
+
+	// Card one of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardOneYellowMesh;
+
+	// Card two of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardTwoYellowMesh;
+
+	// Card three of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardThreeYellowMesh;
+
+	// Card four of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardFourYellowMesh;
+
+	// Card five of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardFiveYellowMesh;
+
+	// Card six of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardSixYellowMesh;
+
+	// Card seven of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardSevenYellowMesh;
+
+	// Card eight of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardEightYellowMesh;
+
+	// Card nine of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardNineYellowMesh;
+
+	// Card skip of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardSkipYellowMesh;
+
+	// Card reverse of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardReverseYellowMesh;
+
+	// Card draw two of yellow mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Yellow")
+	UStaticMesh* cardDrawTwoYellowMesh;
+
+
+	// Wild cards
+	// Card wild mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Wilds")
+	UStaticMesh* cardWildMesh;
+
+	// Card wild draw four mesh
+	UPROPERTY(EditDefaultsOnly, Category = "Card Meshes|Wilds")
+	UStaticMesh* cardWildDrawFourMesh;
+
+	/* --- End of special card meshes --- */
 };

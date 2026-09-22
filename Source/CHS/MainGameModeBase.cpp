@@ -55,7 +55,7 @@ void AMainGameModeBase::BeginPlay()
 		PopulateInventoryImageSlotArray();
 	}
 
-    PopulateDeck();
+    PopulateDecks();
 
 }
 
@@ -77,7 +77,7 @@ void AMainGameModeBase::PopulateInventoryImageSlotArray()
 }
 
 // Add cards to deck array
-void AMainGameModeBase::PopulateDeck()
+void AMainGameModeBase::PopulateDecks()
 {
     // Clear array
     cardDeck.Empty();
@@ -145,6 +145,70 @@ void AMainGameModeBase::PopulateDeck()
 	// Spawn Jokers
 	SpawnAndAddCard(cardRedJokerMesh);
 	SpawnAndAddCard(cardBlackJokerMesh);
+
+	// Spawn red cards
+	SpawnAndAddCard(cardZeroRedMesh);
+	SpawnAndAddCard(cardOneRedMesh);
+	SpawnAndAddCard(cardTwoRedMesh);
+	SpawnAndAddCard(cardThreeRedMesh);
+	SpawnAndAddCard(cardFourRedMesh);
+	SpawnAndAddCard(cardFiveRedMesh);
+	SpawnAndAddCard(cardSixRedMesh);
+	SpawnAndAddCard(cardSevenRedMesh);
+	SpawnAndAddCard(cardEightRedMesh);
+	SpawnAndAddCard(cardNineRedMesh);
+	SpawnAndAddCard(cardSkipRedMesh);
+	SpawnAndAddCard(cardReverseRedMesh);
+	SpawnAndAddCard(cardDrawTwoRedMesh);
+
+	// Spawn blue cards
+	SpawnAndAddCard(cardZeroBlueMesh);
+	SpawnAndAddCard(cardOneBlueMesh);
+	SpawnAndAddCard(cardTwoBlueMesh);
+	SpawnAndAddCard(cardThreeBlueMesh);
+	SpawnAndAddCard(cardFourBlueMesh);
+	SpawnAndAddCard(cardFiveBlueMesh);
+	SpawnAndAddCard(cardSixBlueMesh);
+	SpawnAndAddCard(cardSevenBlueMesh);
+	SpawnAndAddCard(cardEightBlueMesh);
+	SpawnAndAddCard(cardNineBlueMesh);
+	SpawnAndAddCard(cardSkipBlueMesh);
+	SpawnAndAddCard(cardReverseBlueMesh);
+	SpawnAndAddCard(cardDrawTwoBlueMesh);
+
+	// Spawn green cards
+	SpawnAndAddCard(cardZeroGreenMesh);
+	SpawnAndAddCard(cardOneGreenMesh);
+	SpawnAndAddCard(cardTwoGreenMesh);
+	SpawnAndAddCard(cardThreeGreenMesh);
+	SpawnAndAddCard(cardFourGreenMesh);
+	SpawnAndAddCard(cardFiveGreenMesh);
+	SpawnAndAddCard(cardSixGreenMesh);
+	SpawnAndAddCard(cardSevenGreenMesh);
+	SpawnAndAddCard(cardEightGreenMesh);
+	SpawnAndAddCard(cardNineGreenMesh);
+	SpawnAndAddCard(cardSkipGreenMesh);
+	SpawnAndAddCard(cardReverseGreenMesh);
+	SpawnAndAddCard(cardDrawTwoGreenMesh);
+
+	// Spawn yellw cards
+	SpawnAndAddCard(cardZeroYellowMesh);
+	SpawnAndAddCard(cardOneYellowMesh);
+	SpawnAndAddCard(cardTwoYellowMesh);
+	SpawnAndAddCard(cardThreeYellowMesh);
+	SpawnAndAddCard(cardFourYellowMesh);
+	SpawnAndAddCard(cardFiveYellowMesh);
+	SpawnAndAddCard(cardSixYellowMesh);
+	SpawnAndAddCard(cardSevenYellowMesh);
+	SpawnAndAddCard(cardEightYellowMesh);
+	SpawnAndAddCard(cardNineYellowMesh);
+	SpawnAndAddCard(cardSkipYellowMesh);
+	SpawnAndAddCard(cardReverseYellowMesh);
+	SpawnAndAddCard(cardDrawTwoYellowMesh);
+
+	// Spawn wild cards
+	SpawnAndAddCard(cardWildMesh);
+	SpawnAndAddCard(cardWildDrawFourMesh);
 }
 
 void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh)
@@ -172,8 +236,6 @@ void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh)
 
 	// Set card new mesh and push to deck array
 	newCard->SetCardMesh(cardMesh);
-	//newCard->SetActorRelativeScale3D(FVector(0.005000, 0.350000, 0.450000));
-	//newCard->cardMesh->SetRelativeScale3D(FVector(0.600000, 0.600000, 0.452500));
 	cardDeck.Push(newCard);
 
 }
