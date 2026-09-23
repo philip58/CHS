@@ -59,8 +59,6 @@ void AMainGameModeBase::BeginPlay()
 	// Populate the card decks
     PopulateDecks();
 
-	// Get the timer manager
-	timerManager = playerWorld->GetTimerManager();
 
 }
 

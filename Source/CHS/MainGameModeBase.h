@@ -536,6 +536,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Setting")
 	float timerLength = 10.0f;
 
-	// Timer handler for game timers
-	TObjectPtr<FTimerManager> timerManager;
+	// Timer handle for game timers
+	FTimerHandle* timerHandle;
 };
