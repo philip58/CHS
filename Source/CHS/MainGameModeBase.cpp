@@ -56,7 +56,11 @@ void AMainGameModeBase::BeginPlay()
 		PopulateInventoryImageSlotArray();
 	}
 
+	// Populate the card decks
     PopulateDecks();
+
+	// Get the timer manager
+	timerManager = playerWorld->GetTimerManager();
 
 }
 
@@ -84,169 +88,179 @@ void AMainGameModeBase::PopulateDecks()
     cardDeck.Empty();
 
 	// Spawn hearts
-	SpawnAndAddCard(cardAceHeartsMesh);
-	SpawnAndAddCard(cardTwoHeartsMesh);
-	SpawnAndAddCard(cardThreeHeartsMesh);
-	SpawnAndAddCard(cardFourHeartsMesh);
-	SpawnAndAddCard(cardFiveHeartsMesh);
-	SpawnAndAddCard(cardSixHeartsMesh);
-	SpawnAndAddCard(cardSevenHeartsMesh);
-	SpawnAndAddCard(cardEightHeartsMesh);
-	SpawnAndAddCard(cardNineHeartsMesh);
-	SpawnAndAddCard(cardTenHeartsMesh);
-	SpawnAndAddCard(cardJackHeartsMesh);
-	SpawnAndAddCard(cardQueenHeartsMesh);
-	SpawnAndAddCard(cardKingHeartsMesh);
+	SpawnAndAddCard(cardAceHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardTwoHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardThreeHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardFourHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardFiveHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardSixHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardSevenHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardEightHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardNineHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardTenHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardJackHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardQueenHeartsMesh, cardDeck);
+	SpawnAndAddCard(cardKingHeartsMesh, cardDeck);
 
 	// Spawn diamonds
-	SpawnAndAddCard(cardAceDiamondsMesh);
-	SpawnAndAddCard(cardTwoDiamondsMesh);
-	SpawnAndAddCard(cardThreeDiamondsMesh);
-	SpawnAndAddCard(cardFourDiamondsMesh);
-	SpawnAndAddCard(cardFiveDiamondsMesh);
-	SpawnAndAddCard(cardSixDiamondsMesh);
-	SpawnAndAddCard(cardSevenDiamondsMesh);
-	SpawnAndAddCard(cardEightDiamondsMesh);
-	SpawnAndAddCard(cardNineDiamondsMesh);
-	SpawnAndAddCard(cardTenDiamondsMesh);
-	SpawnAndAddCard(cardJackDiamondsMesh);
-	SpawnAndAddCard(cardQueenDiamondsMesh);
-	SpawnAndAddCard(cardKingDiamondsMesh);
+	SpawnAndAddCard(cardAceDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardTwoDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardThreeDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardFourDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardFiveDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardSixDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardSevenDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardEightDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardNineDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardTenDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardJackDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardQueenDiamondsMesh, cardDeck);
+	SpawnAndAddCard(cardKingDiamondsMesh, cardDeck);
 
 	// Spawn clubs
-	SpawnAndAddCard(cardAceClubsMesh);
-	SpawnAndAddCard(cardTwoClubsMesh);
-	SpawnAndAddCard(cardThreeClubsMesh);
-	SpawnAndAddCard(cardFourClubsMesh);
-	SpawnAndAddCard(cardFiveClubsMesh);
-	SpawnAndAddCard(cardSixClubsMesh);
-	SpawnAndAddCard(cardSevenClubsMesh);
-	SpawnAndAddCard(cardEightClubsMesh);
-	SpawnAndAddCard(cardNineClubsMesh);
-	SpawnAndAddCard(cardTenClubsMesh);
-	SpawnAndAddCard(cardJackClubsMesh);
-	SpawnAndAddCard(cardQueenClubsMesh);
-	SpawnAndAddCard(cardKingClubsMesh);
+	SpawnAndAddCard(cardAceClubsMesh, cardDeck);
+	SpawnAndAddCard(cardTwoClubsMesh, cardDeck);
+	SpawnAndAddCard(cardThreeClubsMesh, cardDeck);
+	SpawnAndAddCard(cardFourClubsMesh, cardDeck);
+	SpawnAndAddCard(cardFiveClubsMesh, cardDeck);
+	SpawnAndAddCard(cardSixClubsMesh, cardDeck);
+	SpawnAndAddCard(cardSevenClubsMesh, cardDeck);
+	SpawnAndAddCard(cardEightClubsMesh, cardDeck);
+	SpawnAndAddCard(cardNineClubsMesh, cardDeck);
+	SpawnAndAddCard(cardTenClubsMesh, cardDeck);
+	SpawnAndAddCard(cardJackClubsMesh, cardDeck);
+	SpawnAndAddCard(cardQueenClubsMesh, cardDeck);
+	SpawnAndAddCard(cardKingClubsMesh, cardDeck);
 
 	// Spawn spades
-	SpawnAndAddCard(cardAceSpadesMesh);
-	SpawnAndAddCard(cardTwoSpadesMesh);
-	SpawnAndAddCard(cardThreeSpadesMesh);
-	SpawnAndAddCard(cardFourSpadesMesh);
-	SpawnAndAddCard(cardFiveSpadesMesh);
-	SpawnAndAddCard(cardSixSpadesMesh);
-	SpawnAndAddCard(cardSevenSpadesMesh);
-	SpawnAndAddCard(cardEightSpadesMesh);
-	SpawnAndAddCard(cardNineSpadesMesh);
-	SpawnAndAddCard(cardTenSpadesMesh);
-	SpawnAndAddCard(cardJackSpadesMesh);
-	SpawnAndAddCard(cardQueenSpadesMesh);
-	SpawnAndAddCard(cardKingSpadesMesh);
+	SpawnAndAddCard(cardAceSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardTwoSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardThreeSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardFourSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardFiveSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardSixSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardSevenSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardEightSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardNineSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardTenSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardJackSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardQueenSpadesMesh, cardDeck);
+	SpawnAndAddCard(cardKingSpadesMesh, cardDeck);
 
 	// Spawn Jokers
-	SpawnAndAddCard(cardRedJokerMesh);
-	SpawnAndAddCard(cardBlackJokerMesh);
+	SpawnAndAddCard(cardRedJokerMesh, cardDeck);
+	SpawnAndAddCard(cardBlackJokerMesh, cardDeck);
 
 	// Add a bigger offset to distinguish the two separate decks
 	spawnOffsetCounter += 50;
 
 	// Spawn red cards
-	SpawnAndAddCard(cardZeroRedMesh);
-	SpawnAndAddCard(cardOneRedMesh);
-	SpawnAndAddCard(cardTwoRedMesh);
-	SpawnAndAddCard(cardThreeRedMesh);
-	SpawnAndAddCard(cardFourRedMesh);
-	SpawnAndAddCard(cardFiveRedMesh);
-	SpawnAndAddCard(cardSixRedMesh);
-	SpawnAndAddCard(cardSevenRedMesh);
-	SpawnAndAddCard(cardEightRedMesh);
-	SpawnAndAddCard(cardNineRedMesh);
-	SpawnAndAddCard(cardSkipRedMesh);
-	SpawnAndAddCard(cardReverseRedMesh);
-	SpawnAndAddCard(cardDrawTwoRedMesh);
+	SpawnAndAddCard(cardZeroRedMesh, specialDeck);
+	SpawnAndAddCard(cardOneRedMesh, specialDeck);
+	SpawnAndAddCard(cardTwoRedMesh, specialDeck);
+	SpawnAndAddCard(cardThreeRedMesh, specialDeck);
+	SpawnAndAddCard(cardFourRedMesh, specialDeck);
+	SpawnAndAddCard(cardFiveRedMesh, specialDeck);
+	SpawnAndAddCard(cardSixRedMesh, specialDeck);
+	SpawnAndAddCard(cardSevenRedMesh, specialDeck);
+	SpawnAndAddCard(cardEightRedMesh, specialDeck);
+	SpawnAndAddCard(cardNineRedMesh, specialDeck);
+	SpawnAndAddCard(cardSkipRedMesh, specialDeck);
+	SpawnAndAddCard(cardReverseRedMesh, specialDeck);
+	SpawnAndAddCard(cardDrawTwoRedMesh, specialDeck);
 
 	// Spawn blue cards
-	SpawnAndAddCard(cardZeroBlueMesh);
-	SpawnAndAddCard(cardOneBlueMesh);
-	SpawnAndAddCard(cardTwoBlueMesh);
-	SpawnAndAddCard(cardThreeBlueMesh);
-	SpawnAndAddCard(cardFourBlueMesh);
-	SpawnAndAddCard(cardFiveBlueMesh);
-	SpawnAndAddCard(cardSixBlueMesh);
-	SpawnAndAddCard(cardSevenBlueMesh);
-	SpawnAndAddCard(cardEightBlueMesh);
-	SpawnAndAddCard(cardNineBlueMesh);
-	SpawnAndAddCard(cardSkipBlueMesh);
-	SpawnAndAddCard(cardReverseBlueMesh);
-	SpawnAndAddCard(cardDrawTwoBlueMesh);
+	SpawnAndAddCard(cardZeroBlueMesh, specialDeck);
+	SpawnAndAddCard(cardOneBlueMesh, specialDeck);
+	SpawnAndAddCard(cardTwoBlueMesh, specialDeck);
+	SpawnAndAddCard(cardThreeBlueMesh, specialDeck);
+	SpawnAndAddCard(cardFourBlueMesh, specialDeck);
+	SpawnAndAddCard(cardFiveBlueMesh, specialDeck);
+	SpawnAndAddCard(cardSixBlueMesh, specialDeck);
+	SpawnAndAddCard(cardSevenBlueMesh, specialDeck);
+	SpawnAndAddCard(cardEightBlueMesh, specialDeck);
+	SpawnAndAddCard(cardNineBlueMesh, specialDeck);
+	SpawnAndAddCard(cardSkipBlueMesh, specialDeck);
+	SpawnAndAddCard(cardReverseBlueMesh, specialDeck);
+	SpawnAndAddCard(cardDrawTwoBlueMesh, specialDeck);
 
 	// Spawn green cards
-	SpawnAndAddCard(cardZeroGreenMesh);
-	SpawnAndAddCard(cardOneGreenMesh);
-	SpawnAndAddCard(cardTwoGreenMesh);
-	SpawnAndAddCard(cardThreeGreenMesh);
-	SpawnAndAddCard(cardFourGreenMesh);
-	SpawnAndAddCard(cardFiveGreenMesh);
-	SpawnAndAddCard(cardSixGreenMesh);
-	SpawnAndAddCard(cardSevenGreenMesh);
-	SpawnAndAddCard(cardEightGreenMesh);
-	SpawnAndAddCard(cardNineGreenMesh);
-	SpawnAndAddCard(cardSkipGreenMesh);
-	SpawnAndAddCard(cardReverseGreenMesh);
-	SpawnAndAddCard(cardDrawTwoGreenMesh);
+	SpawnAndAddCard(cardZeroGreenMesh, specialDeck);
+	SpawnAndAddCard(cardOneGreenMesh, specialDeck);
+	SpawnAndAddCard(cardTwoGreenMesh, specialDeck);
+	SpawnAndAddCard(cardThreeGreenMesh, specialDeck);
+	SpawnAndAddCard(cardFourGreenMesh, specialDeck);
+	SpawnAndAddCard(cardFiveGreenMesh, specialDeck);
+	SpawnAndAddCard(cardSixGreenMesh, specialDeck);
+	SpawnAndAddCard(cardSevenGreenMesh, specialDeck);
+	SpawnAndAddCard(cardEightGreenMesh, specialDeck);
+	SpawnAndAddCard(cardNineGreenMesh, specialDeck);
+	SpawnAndAddCard(cardSkipGreenMesh, specialDeck);
+	SpawnAndAddCard(cardReverseGreenMesh, specialDeck);
+	SpawnAndAddCard(cardDrawTwoGreenMesh, specialDeck);
 
 	// Spawn yellw cards
-	SpawnAndAddCard(cardZeroYellowMesh);
-	SpawnAndAddCard(cardOneYellowMesh);
-	SpawnAndAddCard(cardTwoYellowMesh);
-	SpawnAndAddCard(cardThreeYellowMesh);
-	SpawnAndAddCard(cardFourYellowMesh);
-	SpawnAndAddCard(cardFiveYellowMesh);
-	SpawnAndAddCard(cardSixYellowMesh);
-	SpawnAndAddCard(cardSevenYellowMesh);
-	SpawnAndAddCard(cardEightYellowMesh);
-	SpawnAndAddCard(cardNineYellowMesh);
-	SpawnAndAddCard(cardSkipYellowMesh);
-	SpawnAndAddCard(cardReverseYellowMesh);
-	SpawnAndAddCard(cardDrawTwoYellowMesh);
+	SpawnAndAddCard(cardZeroYellowMesh, specialDeck);
+	SpawnAndAddCard(cardOneYellowMesh, specialDeck);
+	SpawnAndAddCard(cardTwoYellowMesh, specialDeck);
+	SpawnAndAddCard(cardThreeYellowMesh, specialDeck);
+	SpawnAndAddCard(cardFourYellowMesh, specialDeck);
+	SpawnAndAddCard(cardFiveYellowMesh, specialDeck);
+	SpawnAndAddCard(cardSixYellowMesh, specialDeck);
+	SpawnAndAddCard(cardSevenYellowMesh, specialDeck);
+	SpawnAndAddCard(cardEightYellowMesh, specialDeck);
+	SpawnAndAddCard(cardNineYellowMesh, specialDeck);
+	SpawnAndAddCard(cardSkipYellowMesh, specialDeck);
+	SpawnAndAddCard(cardReverseYellowMesh, specialDeck);
+	SpawnAndAddCard(cardDrawTwoYellowMesh, specialDeck);
 
 	// Spawn wild cards
-	SpawnAndAddCard(cardWildMesh);
-	SpawnAndAddCard(cardWildDrawFourMesh);
+	SpawnAndAddCard(cardWildMesh, specialDeck);
+	SpawnAndAddCard(cardWildDrawFourMesh, specialDeck);
 }
 
-void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh)
+// Spawn a card actor and add it to the selected deck
+void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr<ACardActor>>& deck)
 {
-    // If no player world or card mesh return
-    if (!playerWorld || !cardMesh || !mainCharacter)
-    {
-        return;
-    }
-
-	// Spawn the card
+	// If spawning failed, return
 	spawnOffsetCounter += 20;
-    FActorSpawnParameters spawnParams;
-    ACardActor* newCard;
-	FTransform transform = FTransform::Identity;
-	transform.SetLocation(mainCharacter->GetActorLocation() + FVector( spawnOffsetCounter - 600, -400, 0));
-    spawnParams.Owner = this;
-	
-	newCard = playerWorld->SpawnActor<ACardActor>(cardActorClass, transform, spawnParams);
-
+	FVector spawnLocation = mainCharacter->GetActorLocation() + FVector(spawnOffsetCounter - 600, -400, 0);
+	ACardActor* newCard = SpawnCardActor(cardMesh, spawnLocation);
 	if (!newCard)
 	{
 		return;
 	}
 
-	// Set card new mesh and push to deck array, then set physics simulate false
-	newCard->SetCardMesh(cardMesh);
-	cardDeck.Push(newCard);
+	// Push the new card to deck array, then set physics simulate false
+	deck.Push(newCard);
 	newCard->cardMesh->SetSimulatePhysics(false);
 	newCard->cardBoxCollision->SetSimulatePhysics(false);
 
 }
 
-void AMainGameModeBase::SpawnCardActor()
+// Spawn a card actor at a given location and return the card
+ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVector& location)
 {
+	// If no player world or card mesh return
+	if (!playerWorld || !cardMesh || !mainCharacter)
+	{
+		return nullptr;
+	}
 
+	// Spawn the card
+	FActorSpawnParameters spawnParams;
+	ACardActor* newCard;
+	FTransform transform = FTransform::Identity;
+	transform.SetLocation(location);
+	spawnParams.Owner = this;
+
+	newCard = playerWorld->SpawnActor<ACardActor>(cardActorClass, transform, spawnParams);
+
+	if (!newCard)
+	{
+		return nullptr;
+	}
+
+	newCard->SetCardMesh(cardMesh);
+	return newCard;
 }

@@ -35,10 +35,10 @@ public:
 	void PopulateDecks();
 
 	// Spawn card and add it to deck
-	void SpawnAndAddCard(UStaticMesh* cardMesh);
+	void SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr<ACardActor>>& deck);
 
-	// Spawn a card
-	void SpawnCardActor();
+	// Spawn a card at given location and return the card
+	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
 	/* --- Variables --- */
 	// Globally accessible character movement component
@@ -68,10 +68,10 @@ public:
 	TArray<TObjectPtr<UBorder>> inventorySlotArray;
 
 	// Array of a deck of cards
-	TArray< TObjectPtr<ACardActor>> cardDeck;
+	TArray<TObjectPtr<ACardActor>> cardDeck;
 
 	// Array of a special deck of cards
-	TArray< TObjectPtr<ACardActor>> specialDeck;
+	TArray<TObjectPtr<ACardActor>> specialDeck;
 
 	// Card actor class
 	UPROPERTY(EditDefaultsOnly, Category = "Card Class")
@@ -527,4 +527,15 @@ public:
 	UStaticMesh* cardWildDrawFourMesh;
 
 	/* --- End of special card meshes --- */
+
+	// Integer of number of players for a table
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Setting")
+	int numPlayers = 1;
+
+	// Integer of timer per turn
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Setting")
+	float timerLength = 10.0f;
+
+	// Timer handler for game timers
+	TObjectPtr<FTimerManager> timerManager;
 };

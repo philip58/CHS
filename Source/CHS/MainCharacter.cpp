@@ -525,7 +525,7 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	}
 
 	// If player is hovering over the game start button change the pop up text
-	if (equippedCard && hoveredActor->IsA(AGameStartButton::StaticClass()))
+	if (hoveredActor->IsA(AGameStartButton::StaticClass()))
 	{
 		gameModeBase->playerHUD->SetInteractPopupText("Press E To Start Game");
 		return;
@@ -757,14 +757,14 @@ void AMainCharacter::UnequipAndRemoveCard()
 // Handle interacting with the game start button
 void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 {
-	if (!gameModeBase || gameModeBase->cardDeck.Num() <= 0)
+	if (!gameModeBase || gameModeBase->specialDeck.Num() <= 0)
 	{
 		return;
 	}
 
-	float rand = FMath::RandRange(0, gameModeBase->cardDeck.Num() - 1);
+	float rand = FMath::RandRange(0, gameModeBase->specialDeck.Num() - 1);
 	rand = FMath::FloorToInt(rand);
-	ACardActor* card = gameModeBase->cardDeck[rand];
+	ACardActor* card = gameModeBase->specialDeck[rand];
 
 	if (!card)
 	{
@@ -778,5 +778,11 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 		return;
 	}
 
-	gameModeBase->SpawnAndAddCard(mesh);
+	ACardActor* newCard = gameModeBase->SpawnCardActor(mesh, FTransform::Identity.GetLocation());
+	if (!newCard)
+	{
+		return;
+	}
+
+	InteractWithCard(newCard);
 }
