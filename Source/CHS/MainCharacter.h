@@ -150,6 +150,9 @@ private:
 	// Handle interacting with the game start button
 	void InteractWithGameStartButton(AActor* actor);
 
+	// Add inventory widgets to arrays
+	void PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -223,9 +226,6 @@ private:
 	// Actor in view hit by line trace during tick function
 	AActor* actorInView;
 
-	// Player HUD
-	UPlayerHUD* playerHUD;
-
 	// Boolean if card is hidden or not
 	bool bIsCardVisible = true;
 
@@ -277,4 +277,19 @@ private:
 
 	// Game start button actor
 	AGameStartButton* gameStartButton;
+
+	// Locally accessible ui
+	UPROPERTY()
+	TObjectPtr<UPlayerHUD> playerHUD;
+
+	// Array of inventory images
+	UPROPERTY()
+	TArray<TObjectPtr<UImage>> inventoryImageArray;
+
+	// Array of inventory slots
+	UPROPERTY()
+	TArray<TObjectPtr<UBorder>> inventorySlotArray;
+
+	// Player controller
+	TObjectPtr<APlayerController> playerController;
 };

@@ -28,9 +28,6 @@ public:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
-	// Add inventory widgets to arrays
-	void PopulateInventoryImageSlotArray();
 
 	// Populate cards to deck array
 	void PopulateDecks();
@@ -68,11 +65,6 @@ public:
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<UPlayerHUD> playerHUDClass;
 
-	// Array of inventory images
-	TArray<TObjectPtr<UImage>> inventoryImageArray;
-
-	// Array of inventory slots
-	TArray<TObjectPtr<UBorder>> inventorySlotArray;
 
 	// Array of a deck of cards
 	TArray<TObjectPtr<ACardActor>> cardDeck;
