@@ -11,6 +11,7 @@ class UPlayerHUD;
 class UImage;
 class UBorder;
 class ACardActor;
+class AMainCharacter;
 
 /**
  * 
@@ -40,6 +41,12 @@ public:
 	// Spawn a card at given location and return the card
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
+	// Main card game loop logic
+	void MainGameLoop();
+
+	// Get random card mesh from card array
+	UStaticMesh* GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray);
+
 	/* --- Variables --- */
 	// Globally accessible character movement component
 	UPROPERTY(BlueprintReadOnly, Category = "Character Properties")
@@ -52,7 +59,7 @@ public:
 	TObjectPtr<APlayerController> playerController;
 
 	// Globally accessible character
-	TObjectPtr<ACharacter> mainCharacter;
+	TObjectPtr<ACharacter> character;
 
 	// Globally accessible ui
 	TObjectPtr<UPlayerHUD> playerHUD;
@@ -529,13 +536,32 @@ public:
 	/* --- End of special card meshes --- */
 
 	// Integer of number of players for a table
-	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Setting")
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
 	int numPlayers = 1;
 
 	// Integer of timer per turn
-	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Setting")
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
 	float timerLength = 10.0f;
 
 	// Timer handle for game timers
 	FTimerHandle* timerHandle;
+
+	// Main character class
+	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
+	TSubclassOf<AMainCharacter> mainCharacterClass;
+
+	// Main character pointer
+	TObjectPtr<AMainCharacter> mainCharacter;
+
+	// Array of main character actors
+	TArray<AActor*> mainCharacterActorArray;
+
+	// Array of main characters
+	TArray<TObjectPtr<AMainCharacter>> mainCharacterArray;
+
+	// Boolean for game is still running or not
+	bool bIsGameRunning = false;
+
+	// Boolean for if first deal of cards to players occured
+	bool bHasFirstDealOccured = false;
 };

@@ -762,7 +762,9 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 		return;
 	}
 
-	float rand = FMath::RandRange(0, gameModeBase->specialDeck.Num() - 1);
+	gameModeBase->MainGameLoop();
+
+	/*float rand = FMath::RandRange(0, gameModeBase->specialDeck.Num() - 1);
 	rand = FMath::FloorToInt(rand);
 	ACardActor* card = gameModeBase->specialDeck[rand];
 
@@ -784,5 +786,5 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 		return;
 	}
 
-	InteractWithCard(newCard);
+	InteractWithCard(newCard);*/
 }

@@ -5,6 +5,8 @@
 #include "PlayerHUD.h"
 #include "CardActor.h"
 #include "Components/BoxComponent.h"
+#include "MainCharacter.h"
+#include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 
 // Class constructor
@@ -29,21 +31,15 @@ void AMainGameModeBase::BeginPlay()
 	// Get main character  
 	if (playerController)
 	{
-		// Try to cast player character to AMainCharacter class
-		try
-		{
-			mainCharacter = playerController->GetCharacter();
-		}
-		catch (const std::exception&)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Exception caught: issue with casting character to main character!"));
-		}
+		character = playerController->GetCharacter();
 	}
 	
 	// Get player movement component
-	if (mainCharacter)
+	if (character)
 	{
-		playerMovementComponent = mainCharacter->GetCharacterMovement();
+		playerMovementComponent = character->GetCharacterMovement();
+
+		mainCharacter = Cast<AMainCharacter>(character);
 	}
 
 	// Set up player HUD
@@ -58,7 +54,6 @@ void AMainGameModeBase::BeginPlay()
 
 	// Populate the card decks
     PopulateDecks();
-
 
 }
 
@@ -222,7 +217,7 @@ void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr
 {
 	// If spawning failed, return
 	spawnOffsetCounter += 20;
-	FVector spawnLocation = mainCharacter->GetActorLocation() + FVector(spawnOffsetCounter - 600, -400, 0);
+	FVector spawnLocation = character->GetActorLocation() + FVector(spawnOffsetCounter - 600, -400, 0);
 	ACardActor* newCard = SpawnCardActor(cardMesh, spawnLocation);
 	if (!newCard)
 	{
@@ -240,7 +235,7 @@ void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr
 ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVector& location)
 {
 	// If no player world or card mesh return
-	if (!playerWorld || !cardMesh || !mainCharacter)
+	if (!playerWorld || !cardMesh || !character)
 	{
 		return nullptr;
 	}
@@ -261,4 +256,63 @@ ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVect
 
 	newCard->SetCardMesh(cardMesh);
 	return newCard;
+}
+
+// Main card game loop logic
+void AMainGameModeBase::MainGameLoop()
+{
+	// If no player world or card mesh return
+	if (!playerWorld || !mainCharacter || !character)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Cannot start game because if (!playerWorld || !mainCharacter || !character) returned true"));
+		return;
+	}
+
+	// Get the number of players playing the game
+	UGameplayStatics::GetAllActorsOfClass(playerWorld, mainCharacterClass, mainCharacterActorArray);
+
+	for (AActor* actor : mainCharacterActorArray)
+	{
+		AMainCharacter* mc = Cast<AMainCharacter>(actor);
+		if (mc) mainCharacterArray.Push(mc);
+	}
+
+	if (mainCharacterArray.Num() <= 0) return;
+
+	UStaticMesh* mesh;
+	ACardActor* card;
+	AMainCharacter* tempMainCharacter;
+
+	bIsGameRunning = true;
+	while (bIsGameRunning)
+	{
+		// Spawn a card for each player
+		for (int i = 0; i < mainCharacterArray.Num(); ++i)
+		{
+			mesh = GetRandomCardMesh(specialDeck);
+			if (!mesh) continue;
+			card = SpawnCardActor(mesh, FVector(0,0,0));
+			tempMainCharacter = mainCharacterArray[i];
+			tempMainCharacter->InteractWithCard(card);
+		}
+		bIsGameRunning = false;
+	}
+
+}
+
+// Get random card mesh from card array
+UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray)
+{
+	// Get random number between 0 to deck size 
+	float randNum = FMath::RandRange(0, deckArray.Num() - 1);
+	FMath::FloorToInt(randNum);
+
+	// Get the mesh and return it or nullptr
+	UStaticMesh* mesh; 
+	UStaticMeshComponent* meshComponent = deckArray[randNum]->cardMesh;
+	if (!meshComponent) return nullptr;
+	mesh = meshComponent->GetStaticMesh();
+	if (!mesh) return nullptr;
+	return mesh;
+
 }
