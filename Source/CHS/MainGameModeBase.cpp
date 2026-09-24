@@ -47,8 +47,11 @@ void AMainGameModeBase::BeginPlay()
 // Add cards to deck array
 void AMainGameModeBase::PopulateDecks()
 {
-    // Clear array
-    cardDeck.Empty();
+	// Return if the decks have already been populated
+	if (cardDeck.Num() > 0 && specialDeck.Num() > 0)
+	{
+		return;
+	}
 
 	// Spawn hearts
 	SpawnAndAddCard(cardAceHeartsMesh, cardDeck);
