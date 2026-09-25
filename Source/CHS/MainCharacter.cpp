@@ -9,6 +9,7 @@
 #include "Components/Image.h"
 #include "Components/Border.h"
 #include "CardTableSlot.h"
+#include "GameStartButton.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -54,6 +55,25 @@ void AMainCharacter::BeginPlay()
 		// Set up player movement properties: default speed 
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = walkSpeed;
 		gameModeBase->playerMovementComponent->AirControl = airControl;
+	
+		// Set up player HUD
+		playerController = Cast<APlayerController>(GetController());
+
+		if (playerController && playerController->IsLocalController())
+		{
+			playerHUD = CreateWidget<UPlayerHUD>(playerController, gameModeBase->playerHUDClass);
+		}		
+
+		if (playerHUD)
+		{
+			playerHUD->AddToViewport();
+
+			// Add inventory widgets to arrays
+			PopulateInventoryImageSlotArray(playerHUD);
+		}
+
+		// Populate the card decks
+		gameModeBase->PopulateDecks();
 	}
 
 	if (cardPlaceHolderSocket)
@@ -79,7 +99,10 @@ void AMainCharacter::Tick(float deltaTime)
 	else
 	{
 		// If nothing is being hovered, clear the interact text
-		gameModeBase->playerHUD->SetInteractPopupText("");
+		if(playerHUD)
+		{
+			playerHUD->SetInteractPopupText("");
+		}
 	}
 
 }
@@ -251,6 +274,10 @@ void AMainCharacter::Interact()
 		InteractWithChair(hitActor);
 	}
 
+	if (hitActor->IsA(AGameStartButton::StaticClass()))
+	{
+		InteractWithGameStartButton(hitActor);
+	}
 
 }
 
@@ -366,12 +393,12 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	// If inventory is empty, change inventory image to card img
 	if (cardsInInventory.Num() == 0)
 	{
-		if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
+		if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 		{
-			gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
-			gameModeBase->playerHUD->SetInventorySlotColor
+			playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
+			playerHUD->SetInventorySlotColor
 			(
-				gameModeBase->inventorySlotArray[inventoryPos],
+				inventorySlotArray[inventoryPos],
 				rSelectedColorInventorySlot,
 				gSelectedColorInventorySlot,
 				bSelectedColorInventorySlot,
@@ -493,7 +520,7 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 void AMainCharacter::HandleHovering(AActor* hoveredActor)
 {
 	// Return if no gamemode base and no HUD
-	if (!gameModeBase || !gameModeBase->playerHUD)
+	if (!gameModeBase || !playerHUD)
 	{
 		return;
 	}
@@ -501,45 +528,45 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
-		//CardHover(hoveredActor);
-		gameModeBase->playerHUD->SetInteractPopupText("Press E To Pick Up");
+		playerHUD->SetInteractPopupText("Press E To Pick Up");
 		return;
 	}
 
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
 	{
-		//ChairHover(hoveredActor);
-		gameModeBase->playerHUD->SetInteractPopupText("Press E To Sit");
+		playerHUD->SetInteractPopupText("Press E To Sit");
 		return;
 	}
 
 	// If player is holding a card and the hit actor is a card slot
 	if (equippedCard && hoveredActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		//gameModeBase->playerHUD->SetInteractPopupText("Press E To Place");
+		//playerHUD->SetInteractPopupText("Press E To Place");
 		//return; 
 	}
 
-	// If nothing is being hovered, clear the interact text
-	gameModeBase->playerHUD->SetInteractPopupText("");
-}
+	// If player is hovering over the game start button change the pop up text
+	if (hoveredActor->IsA(AGameStartButton::StaticClass()))
+	{
+		AGameStartButton* button;
+		button = Cast<AGameStartButton>(hoveredActor);
+		bool hasGameStarted = false;
+		if (button) hasGameStarted = button->GetGameHasStarted();
+		if (!hasGameStarted)
+		{
+			playerHUD->SetInteractPopupText("Press E To Start Game");
+		}
+		else
+		{
+			playerHUD->SetInteractPopupText("");
+		}
+		return;
+	}
 
-//// Handle loggic while hovering over a chair
-//void AMainCharacter::CardHover(AActor* hoveredActor)
-//{
-//	// Get chair from actor
-//	ACardActor* card;
-//	card = Cast<ACardActor>(hoveredActor);
-//}
-//
-//// Handle loggic while hovering over a chair
-//void AMainCharacter::ChairHover(AActor* hoveredActor)
-//{
-//	// Get chair from actor
-//	APlayerChairSlot* chair;
-//	chair = Cast<APlayerChairSlot>(hoveredActor);
-//}
+	// If nothing is being hovered, clear the interact text
+	playerHUD->SetInteractPopupText("");
+}
 
 // Increment through the cards up or down depending on int (-1 or 1)
 void AMainCharacter::IncrementThroughCards(const int& increment)
@@ -597,7 +624,7 @@ void AMainCharacter::IncrementThroughCards(const int& increment)
 void AMainCharacter::IncrementThroughInventory(const int& increment)
 {
 	// Return if HUD does not exist or if any inventory array is empty
-	if (!IsValid(gameModeBase->playerHUD) || gameModeBase->inventoryImageArray.Num() <= 0 || gameModeBase->inventorySlotArray.Num() <= 0 )
+	if (!IsValid(playerHUD) || inventoryImageArray.Num() <= 0 || inventorySlotArray.Num() <= 0 )
 	{
 		return;
 	}
@@ -607,7 +634,7 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 	if (increment > 0)
 	{
 		// Increment
-		if (inventoryPos == (gameModeBase->inventorySlotArray.Num() - 1))
+		if (inventoryPos == (inventorySlotArray.Num() - 1))
 		{
 			tempPos = 0;
 		}
@@ -621,7 +648,7 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 		// Decrement
 		if (inventoryPos == 0)
 		{
-			tempPos = gameModeBase->inventorySlotArray.Num() - 1;
+			tempPos = inventorySlotArray.Num() - 1;
 		}
 		else
 		{
@@ -674,7 +701,7 @@ void AMainCharacter::SelectInventorySlot6()
 void AMainCharacter::NavigateToSelectedInventorySlot(int inventorySlotNumber)
 {
 	// Return if HUD does not exist or if any inventory array is empty
-	if (!IsValid(gameModeBase->playerHUD) || gameModeBase->inventoryImageArray.Num() <= 0 || gameModeBase->inventorySlotArray.Num() <= 0)
+	if (!IsValid(playerHUD) || inventoryImageArray.Num() <= 0 || inventorySlotArray.Num() <= 0)
 	{
 		return;
 	}
@@ -687,17 +714,17 @@ void AMainCharacter::NavigateToSelectedInventorySlot(int inventorySlotNumber)
 void AMainCharacter::HighlightSelectedInventorySlot(int inventorySlot)
 {
 	// Set inventory slot/image attributes for old/new positions
-	gameModeBase->playerHUD->SetInventorySlotColor
+	playerHUD->SetInventorySlotColor
 	(
-		gameModeBase->inventorySlotArray[inventoryPos],
+		inventorySlotArray[inventoryPos],
 		rDefaultColorInventorySlot,
 		gDefaultColorInventorySlot,
 		bDefaultColorInventorySlot,
 		aDefaultColorInventorySlot
 	);
-	gameModeBase->playerHUD->SetInventorySlotColor
+	playerHUD->SetInventorySlotColor
 	(
-		gameModeBase->inventorySlotArray[inventorySlot],
+		inventorySlotArray[inventorySlot],
 		rSelectedColorInventorySlot,
 		gSelectedColorInventorySlot,
 		bSelectedColorInventorySlot,
@@ -707,9 +734,9 @@ void AMainCharacter::HighlightSelectedInventorySlot(int inventorySlot)
 	inventoryPos = inventorySlot;
 
 	// Toggle hiding card if we move onto or away from the inventory slot holding the card
-	UObject* object = gameModeBase->inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject();
+	UObject* object = inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject();
 	UTexture2D* texture = Cast<UTexture2D>(object);
-	if (texture && gameModeBase->inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject() == cardInventoryImg)
+	if (texture && inventoryImageArray[inventoryPos]->GetBrush().GetResourceObject() == cardInventoryImg)
 	{
 		ToggleCardHide(false);
 	}
@@ -746,16 +773,51 @@ void AMainCharacter::UnequipAndRemoveCard()
 	}
 
 	// If inventory is empty, remove card image from inventory ui
-	if (gameModeBase && gameModeBase->playerHUD && gameModeBase->inventoryImageArray[inventoryPos] && gameModeBase->inventorySlotArray[inventoryPos])
+	if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 	{
-		gameModeBase->playerHUD->SetInventoryImage(gameModeBase->inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
-		gameModeBase->playerHUD->SetInventorySlotColor
+		playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
+		playerHUD->SetInventorySlotColor
 		(
-			gameModeBase->inventorySlotArray[inventoryPos],
+			inventorySlotArray[inventoryPos],
 			rDefaultColorInventorySlot,
 			gDefaultColorInventorySlot,
 			bDefaultColorInventorySlot,
 			aDefaultColorInventorySlot
 		);
 	}
+}
+
+// Handle interacting with the game start button
+void AMainCharacter::InteractWithGameStartButton(AActor* actor)
+{
+	// Return if no gamemode base or no deck 
+	if (!gameModeBase || gameModeBase->specialDeck.Num() <= 0)
+	{
+		return;
+	}
+
+	// Cast actor to game start button 
+	AGameStartButton* interactedGameStartButton;
+	interactedGameStartButton = Cast<AGameStartButton>(actor);
+
+	// Start the game only if its not started
+	if (gameModeBase->bIsGameRunning) return; 
+	if (interactedGameStartButton) gameModeBase->MainGameLoop(interactedGameStartButton);
+}
+
+// Add inventory widgets to arrays
+void AMainCharacter::PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud)
+{
+	inventoryImageArray.Push(hud->inventoryImage1);
+	inventoryImageArray.Push(hud->inventoryImage2);
+	inventoryImageArray.Push(hud->inventoryImage3);
+	inventoryImageArray.Push(hud->inventoryImage4);
+	inventoryImageArray.Push(hud->inventoryImage5);
+	inventoryImageArray.Push(hud->inventoryImage6);
+	inventorySlotArray.Push(hud->inventorySlot1);
+	inventorySlotArray.Push(hud->inventorySlot2);
+	inventorySlotArray.Push(hud->inventorySlot3);
+	inventorySlotArray.Push(hud->inventorySlot4);
+	inventorySlotArray.Push(hud->inventorySlot5);
+	inventorySlotArray.Push(hud->inventorySlot6);
 }

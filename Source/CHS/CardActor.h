@@ -4,10 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Components/BoxComponent.h"
 #include "CardActor.generated.h"
 
 class AMainCharacter;
+class UBoxComponent;
 
 // Card type enum
 UENUM(BlueprintType)
