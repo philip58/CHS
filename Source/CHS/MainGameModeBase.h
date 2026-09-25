@@ -12,6 +12,7 @@ class UImage;
 class UBorder;
 class ACardActor;
 class AMainCharacter;
+class AGameStartButton;
 
 /**
  * 
@@ -39,7 +40,7 @@ public:
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
 	// Main card game loop logic
-	void MainGameLoop();
+	void MainGameLoop(AGameStartButton* currGameStartButton);
 
 	// Get random card mesh from card array
 	UStaticMesh* GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray);
@@ -534,6 +535,10 @@ public:
 	// Integer of timer per turn
 	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
 	float timerLength = 10.0f;
+
+	// Number of cards to be dealt in first hand
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
+	int cardsDealtFirst = 7;
 
 	// Timer handle for game timers
 	FTimerHandle* timerHandle;

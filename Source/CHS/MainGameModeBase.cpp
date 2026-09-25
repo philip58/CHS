@@ -6,6 +6,7 @@
 #include "CardActor.h"
 #include "Components/BoxComponent.h"
 #include "MainCharacter.h"
+#include "GameStartButton.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Character.h"
 
@@ -232,7 +233,7 @@ ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVect
 }
 
 // Main card game loop logic
-void AMainGameModeBase::MainGameLoop()
+void AMainGameModeBase::MainGameLoop(AGameStartButton* currGameStartButton)
 {
 	// If no player world or card mesh return
 	if (!playerWorld || !mainCharacter || !character)
@@ -257,18 +258,23 @@ void AMainGameModeBase::MainGameLoop()
 	AMainCharacter* tempMainCharacter;
 
 	bIsGameRunning = true;
+	currGameStartButton->SetGameHasStarted(true);
 	while (bIsGameRunning)
 	{
 		// Spawn a card for each player
 		for (int i = 0; i < mainCharacterArray.Num(); ++i)
 		{
-			mesh = GetRandomCardMesh(specialDeck);
-			if (!mesh) continue;
-			card = SpawnCardActor(mesh, FVector(0,0,0));
-			tempMainCharacter = mainCharacterArray[i];
-			tempMainCharacter->InteractWithCard(card);
+			for (int j = 0; j < cardsDealtFirst; ++j)
+			{
+				mesh = GetRandomCardMesh(specialDeck);
+				if (!mesh) continue;
+				card = SpawnCardActor(mesh, FVector(0, 0, 0));
+				tempMainCharacter = mainCharacterArray[i];
+				tempMainCharacter->InteractWithCard(card);
+			}
 		}
 		bIsGameRunning = false;
+		//currGameStartButton->SetGameHasStarted(false);
 	}
 
 	mainCharacterArray.Empty();

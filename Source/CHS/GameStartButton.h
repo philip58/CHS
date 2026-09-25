@@ -25,6 +25,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Get the has game started boolean
+	bool GetGameHasStarted() const;
+
+	// Set the has game started boolean
+	void SetGameHasStarted(const bool& gameStarted);
+
 private:
 	/* --- Methods --- */
 
@@ -37,4 +43,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* buttonMeshComponent;
 
+	// Game has started boolean to handle interact text setting and button disabling
+	bool bHasGameStarted = false;
 };

@@ -32,3 +32,15 @@ void AGameStartButton::Tick(float DeltaTime)
 
 }
 
+// Return the bGameHasStarted boolean
+bool AGameStartButton::GetGameHasStarted() const
+{
+	return bHasGameStarted;
+}
+
+// Set bHasGameStarted boolean
+void AGameStartButton::SetGameHasStarted(const bool& gameStarted)
+{
+	bHasGameStarted = gameStarted;
+}
+

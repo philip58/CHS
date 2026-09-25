@@ -549,7 +549,18 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If player is hovering over the game start button change the pop up text
 	if (hoveredActor->IsA(AGameStartButton::StaticClass()))
 	{
-		playerHUD->SetInteractPopupText("Press E To Start Game");
+		AGameStartButton* button;
+		button = Cast<AGameStartButton>(hoveredActor);
+		bool hasGameStarted = false;
+		if (button) hasGameStarted = button->GetGameHasStarted();
+		if (!hasGameStarted)
+		{
+			playerHUD->SetInteractPopupText("Press E To Start Game");
+		}
+		else
+		{
+			playerHUD->SetInteractPopupText("");
+		}
 		return;
 	}
 
@@ -779,14 +790,19 @@ void AMainCharacter::UnequipAndRemoveCard()
 // Handle interacting with the game start button
 void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 {
+	// Return if no gamemode base or no deck 
 	if (!gameModeBase || gameModeBase->specialDeck.Num() <= 0)
 	{
 		return;
 	}
 
+	// Cast actor to game start button 
+	AGameStartButton* interactedGameStartButton;
+	interactedGameStartButton = Cast<AGameStartButton>(actor);
+
 	// Start the game only if its not started
 	if (gameModeBase->bIsGameRunning) return; 
-	gameModeBase->MainGameLoop();
+	if (interactedGameStartButton) gameModeBase->MainGameLoop(interactedGameStartButton);
 }
 
 // Add inventory widgets to arrays
