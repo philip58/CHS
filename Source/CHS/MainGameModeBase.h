@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "CardTypeEnums.h"
 #include "MainGameModeBase.generated.h"
 
 class UPlayerHUD;
@@ -34,7 +35,7 @@ public:
 	void PopulateDecks();
 
 	// Spawn card and add it to deck
-	void SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr<ACardActor>>& deck);
+	void SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr<ACardActor>>& deck, const ECardType& cardType, const ECardValue& cardValue);
 
 	// Spawn a card at given location and return the card
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
