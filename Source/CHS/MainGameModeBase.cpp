@@ -235,7 +235,7 @@ ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVect
 }
 
 // Main card game loop logic
-void AMainGameModeBase::MainGameLoop(AGameStartButton* currGameStartButton)
+void AMainGameModeBase::StartMainGameLoop(AGameStartButton* currGameStartButton)
 {
 	// If no player world or card mesh return
 	if (!playerWorld || !mainCharacter || !character)
@@ -244,7 +244,7 @@ void AMainGameModeBase::MainGameLoop(AGameStartButton* currGameStartButton)
 		return;
 	}
 
-	// Get the number of players playing the game
+	// Get the number of players playing the game and start
 	UGameplayStatics::GetAllActorsOfClass(playerWorld, mainCharacterClass, mainCharacterActorArray);
 
 	for (AActor* actor : mainCharacterActorArray)
@@ -252,34 +252,34 @@ void AMainGameModeBase::MainGameLoop(AGameStartButton* currGameStartButton)
 		AMainCharacter* mc = Cast<AMainCharacter>(actor);
 		if (mc) mainCharacterArray.Push(mc);
 	}
-
 	if (mainCharacterArray.Num() <= 0) return;
 
+	bIsGameRunning = true;
+	currGameStartButton->SetGameHasStarted(true);
+	cardGameState = ECardGameState::GS_Start;
+
+	// Spawn a card for each player
 	UStaticMesh* mesh;
 	ACardActor* card;
 	AMainCharacter* tempMainCharacter;
 
-	bIsGameRunning = true;
-	currGameStartButton->SetGameHasStarted(true);
-	while (bIsGameRunning)
+	for (int i = 0; i < mainCharacterArray.Num(); ++i)
 	{
-		// Spawn a card for each player
-		for (int i = 0; i < mainCharacterArray.Num(); ++i)
+		for (int j = 0; j < cardsDealtFirst; ++j)
 		{
-			for (int j = 0; j < cardsDealtFirst; ++j)
-			{
-				mesh = GetRandomCardMesh(specialDeck);
-				if (!mesh) continue;
-				card = SpawnCardActor(mesh, FVector(0, 0, 0));
-				tempMainCharacter = mainCharacterArray[i];
-				tempMainCharacter->InteractWithCard(card);
-			}
+			mesh = GetRandomCardMesh(specialDeck);
+			if (!mesh) continue;
+			card = SpawnCardActor(mesh, FVector(0, 0, 0));
+			tempMainCharacter = mainCharacterArray[i];
+			tempMainCharacter->InteractWithCard(card);
 		}
-		bIsGameRunning = false;
-		//currGameStartButton->SetGameHasStarted(false);
 	}
 
-	mainCharacterArray.Empty();
+	GetWorldTimerManager().SetTimer( timerHandle, this, &AMainGameModeBase::TurnTimerFinished, 5.0f, false);
+	UE_LOG(LogTemp, Display, TEXT("Timer started"));
+
+	/*bIsGameRunning = false;
+	currGameStartButton->SetGameHasStarted(false);*/
 
 }
 
@@ -298,4 +298,10 @@ UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardA
 	if (!mesh) return nullptr;
 	return mesh;
 
+}
+
+// Handle logic for when timer runs out for player ( go to next player and reset timer )
+void AMainGameModeBase::TurnTimerFinished()
+{
+	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
 }

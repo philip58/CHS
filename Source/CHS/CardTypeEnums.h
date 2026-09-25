@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "CardTypeEnums.generated.h"
 
+// Card type enum, suit & color
 UENUM(BlueprintType)
 enum class ECardType : uint8
 {
@@ -20,6 +21,7 @@ enum class ECardType : uint8
     CT_Wild    UMETA(DisplayName = "Wild")
 };
 
+// Card value enum, number, name or special card
 UENUM(BlueprintType)
 enum class ECardValue : uint8
 {
@@ -46,4 +48,13 @@ enum class ECardValue : uint8
     CV_Wild     UMETA(DisplayName = "Wild")
 };
 
+// Card game state enums
+UENUM(BlueprintType)
+enum class ECardGameState : uint8
+{
+    GS_Start    UMETA(DisplayName = "Start"),
+    GS_Wait    UMETA(DisplayName = "Wait"),
+    GS_Stack    UMETA(DisplayName = "Stack"),
+    GS_Done    UMETA(DisplayName = "Done")
+};
 

@@ -41,10 +41,13 @@ public:
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
 	// Main card game loop logic
-	void MainGameLoop(AGameStartButton* currGameStartButton);
+	void StartMainGameLoop(AGameStartButton* currGameStartButton);
 
 	// Get random card mesh from card array
 	UStaticMesh* GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray);
+
+	// Handle logic for when the player ran out of time
+	void TurnTimerFinished();
 
 	/* --- Variables --- */
 	// Globally accessible character movement component
@@ -542,7 +545,7 @@ public:
 	int cardsDealtFirst = 7;
 
 	// Timer handle for game timers
-	FTimerHandle* timerHandle;
+	FTimerHandle timerHandle;
 
 	// Main character class
 	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
@@ -562,4 +565,8 @@ public:
 
 	// Boolean for if first deal of cards to players occured
 	bool bHasFirstDealOccured = false;
+
+	// Game state enum for tracking point in match
+	ECardGameState cardGameState;
+
 };

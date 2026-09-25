@@ -802,7 +802,7 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 
 	// Start the game only if its not started
 	if (gameModeBase->bIsGameRunning) return; 
-	if (interactedGameStartButton) gameModeBase->MainGameLoop(interactedGameStartButton);
+	if (interactedGameStartButton) gameModeBase->StartMainGameLoop(interactedGameStartButton);
 }
 
 // Add inventory widgets to arrays
