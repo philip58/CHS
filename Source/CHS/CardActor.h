@@ -4,40 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CardTypeEnums.h"
 #include "CardActor.generated.h"
 
 class AMainCharacter;
 class UBoxComponent;
-
-// Card type enum
-UENUM(BlueprintType)
-enum class ECardType : uint8
-{
-	CT_Club    UMETA(DisplayName = "Club"),
-	CT_Spade   UMETA(DisplayName = "Spade"),
-	CT_Heart   UMETA(DisplayName = "Heart"),
-	CT_Diamond UMETA(DisplayName = "Diamond")
-};
-
-// Card value enum
-UENUM(BlueprintType)
-enum class ECardValue : uint8
-{
-	CV_2     UMETA(DisplayName = "2"),
-	CV_3     UMETA(DisplayName = "3"),
-	CV_4     UMETA(DisplayName = "4"),
-	CV_5     UMETA(DisplayName = "5"),
-	CV_6     UMETA(DisplayName = "6"),
-	CV_7     UMETA(DisplayName = "7"),
-	CV_8     UMETA(DisplayName = "8"),
-	CV_9     UMETA(DisplayName = "9"),
-	CV_10    UMETA(DisplayName = "10"),
-	CV_Jack  UMETA(DisplayName = "Jack"),
-	CV_Queen UMETA(DisplayName = "Queen"),
-	CV_King  UMETA(DisplayName = "King"),
-	CV_Ace   UMETA(DisplayName = "Ace"),
-	CV_Joker UMETA(DisplayName = "Joker")
-};
 
 UCLASS()
 class CHS_API ACardActor : public AActor
@@ -81,6 +52,17 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Mesh Properties")
 	UBoxComponent* cardBoxCollision;
 
+	// Set the card type
+	void SetCardType(const ECardType& newCardType);
+
+	// Set the card value
+	void SetCardValue(const ECardValue& newCardValue);
+
+	// Get the card type
+	ECardType GetCardType() const;
+
+	// Get the card value
+	ECardValue GetCardValue() const;
 private:
 	/* --- Methods --- */
 	// Overlap collision method

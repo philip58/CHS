@@ -131,3 +131,27 @@ void ACardActor::SetCardMesh(UStaticMesh* newCardMesh)
 	}
 }
 
+// Set the card type
+void ACardActor::SetCardType(const ECardType& newCardType)
+{
+	cardType = newCardType;
+}
+
+// Set the card value
+void ACardActor::SetCardValue(const ECardValue& newCardValue)
+{
+	cardValue = newCardValue;
+}
+
+// Get the card type
+ECardType ACardActor::GetCardType() const
+{
+	return cardType;
+}
+
+// Get the card value
+ECardValue ACardActor::GetCardValue() const
+{
+	return cardValue;
+}
+
