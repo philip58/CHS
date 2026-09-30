@@ -14,6 +14,8 @@ class UBorder;
 class ACardActor;
 class AMainCharacter;
 class AGameStartButton;
+class UTextRenderComponent;
+class ATextRenderActor;
 
 /**
  * 
@@ -30,6 +32,9 @@ public:
 
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	// Called every frame
+	virtual void Tick(float deltatime) override;
 
 	// Populate cards to deck array
 	void PopulateDecks();
@@ -48,6 +53,9 @@ public:
 
 	// Handle logic for when the player ran out of time
 	void TurnTimerFinished();
+
+	// Wait game state logic
+	void WaitForPlayerTurn();
 
 	/* --- Variables --- */
 	// Globally accessible character movement component
@@ -568,5 +576,9 @@ public:
 
 	// Game state enum for tracking point in match
 	ECardGameState cardGameState;
+
+	// Game table text component
+	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
+	TObjectPtr<UTextRenderComponent> tableTextComponent;
 
 };

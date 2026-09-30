@@ -8,6 +8,7 @@
 #include "MainCharacter.h"
 #include "GameStartButton.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/TextRenderComponent.h"
 #include "GameFramework/Character.h"
 
 // Class constructor
@@ -44,6 +45,20 @@ void AMainGameModeBase::BeginPlay()
 	}
 
 }
+
+// Called every frame
+void AMainGameModeBase::Tick(float deltatime)
+{
+	Super::Tick(deltatime);
+
+	// If game state is in waiting for player move, call wait state function logic
+	if (cardGameState == ECardGameState::GS_Wait)
+	{
+		WaitForPlayerTurn();
+	}
+}
+
+
 
 // Add cards to deck array
 void AMainGameModeBase::PopulateDecks()
@@ -276,6 +291,7 @@ void AMainGameModeBase::StartMainGameLoop(AGameStartButton* currGameStartButton)
 	}
 
 	GetWorldTimerManager().SetTimer( timerHandle, this, &AMainGameModeBase::TurnTimerFinished, 5.0f, false);
+	cardGameState = ECardGameState::GS_Wait;
 	UE_LOG(LogTemp, Display, TEXT("Timer started"));
 
 	/*bIsGameRunning = false;
@@ -304,4 +320,12 @@ UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardA
 void AMainGameModeBase::TurnTimerFinished()
 {
 	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
+	cardGameState = ECardGameState::GS_Done;
+}
+
+// Called when waiting on player's turn
+void AMainGameModeBase::WaitForPlayerTurn()
+{
+	double timerText = GetWorldTimerManager().GetTimerRemaining(timerHandle);
+	/*tableTextComponent->SetText( FText::AsNumber(timerText) );*/
 }
