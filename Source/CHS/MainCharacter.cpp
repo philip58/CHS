@@ -802,7 +802,8 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 	interactedGameStartButton = Cast<AGameStartButton>(actor);
 	AActor* owningActor = interactedGameStartButton->GetOwner();
 	ACardGameTable* owningGameTable;
-	if (owningActor) owningGameTable = Cast<ACardGameTable>(owningActor);
+	if (!owningActor) return;
+	owningGameTable = Cast<ACardGameTable>(owningActor);
 	if (!owningGameTable) return;
 
 	// Start the game only if its not started

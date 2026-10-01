@@ -77,6 +77,10 @@ void ACardGameTable::Tick(float DeltaTime)
 	{
 		WaitForPlayerTurn();
 	}
+	else if (cardGameState == ECardGameState::GS_Done)
+	{
+		//PlayerTurnDone();
+	}
 
 }
 
@@ -116,7 +120,7 @@ void ACardGameTable::SpawnPlayerChairs()
 	{
 		if (i % 4 == 0)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector(-chairDistanceFromNeighbor, (-tableSize.Y / chairXSpawnMultiplier) - chairYSpawnPadding, chairZSpawnPadding));
+			chairNewTransform.SetLocation(currTableLocation + FVector(chairDistanceFromNeighbor, (tableSize.Y / chairXSpawnMultiplier) + chairYSpawnPadding, chairZSpawnPadding));
 		}
 		else if (i % 4 == 1)
 		{
@@ -129,18 +133,18 @@ void ACardGameTable::SpawnPlayerChairs()
 		}
 		else if (i % 4 == 2)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector((tableSize.X / chairXSpawnMultiplier) + chairXSpawnPadding, chairDistanceFromNeighbor, chairZSpawnPadding));
+			chairNewTransform.SetLocation(currTableLocation + FVector(-chairDistanceFromNeighbor, (-tableSize.Y / chairXSpawnMultiplier) - chairYSpawnPadding, chairZSpawnPadding));
 		}
 		else if (i % 4 == 3)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector(chairDistanceFromNeighbor, (tableSize.Y / chairXSpawnMultiplier) + chairYSpawnPadding, chairZSpawnPadding));
+			chairNewTransform.SetLocation(currTableLocation + FVector((tableSize.X / chairXSpawnMultiplier) + chairXSpawnPadding, chairDistanceFromNeighbor, chairZSpawnPadding));
 		}
 
 
 		// Spawn the chair actor, rotate it, and append to the chairs array
 		spawnedPlayerChair = mainGameModeBase->playerWorld->SpawnActor<APlayerChairSlot>(playerChairClass, chairNewTransform, chairSpawnParams);
 		spawnedPlayerChair->SetActorRelativeRotation(FRotator(-90, 0, 0));
-		playerChairArray.Push(spawnedPlayerChair);
+		playerChairMap.Add(i, spawnedPlayerChair);
 
 	}
 }
@@ -196,9 +200,7 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		}
 	}
 
-	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, 5.0f, false);
-	cardGameState = ECardGameState::GS_Wait;
-	UE_LOG(LogTemp, Display, TEXT("Timer started"));
+	SetPlayerTurnTimer();
 
 	/*bIsGameRunning = false;
 	currGameStartButton->SetGameHasStarted(false);*/
@@ -210,13 +212,22 @@ void ACardGameTable::TurnTimerFinished()
 {
 	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
 	cardGameState = ECardGameState::GS_Done;
+	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
+	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
+}
+
+// Set player turn wait timer 
+void ACardGameTable::SetPlayerTurnTimer()
+{
+	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, turnTimerLength, false);
+	cardGameState = ECardGameState::GS_Wait;
 }
 
 // Called when waiting on player's turn
 void ACardGameTable::WaitForPlayerTurn()
 {
 	float timerText = GetWorldTimerManager().GetTimerRemaining(timerHandle);
-	UTextRenderComponent* timerTextComponent = timerTextActor->GetTextRender();
+	timerText = FMath::Floor(timerText * 10) / 10.0f;
 	if(timerTextComponent) timerTextComponent->SetText(FText::AsNumber(timerText));
 }
 
@@ -230,12 +241,15 @@ void ACardGameTable::SpawnTimerText()
 	timerNewTransform.SetLocation(currTableLocation
 		+
 		FVector(
-			(-tableSize.X / timerXSpawnMultiplier) + timerXSpawnPadding * 0,
-			(-tableSize.Y / timerYSpawnMultiplier) + timerYSpawnPadding * 0,
+			//(-tableSize.X / timerXSpawnMultiplier) + timerXSpawnPadding,
+			0,
+			(-tableSize.Y / timerYSpawnMultiplier) + timerYSpawnPadding,
 			(tableSize.Z / timerZSpawnMultiplier) + timerZSpawnPadding)
 	);
 
 	// Spawn the timer actor and rotate it correctly
-	timerTextActor = mainGameModeBase->playerWorld->SpawnActor<ATextRenderActor>(gameStartButtonClass, timerNewTransform, timerSpawnParams);
+	timerTextActor = mainGameModeBase->playerWorld->SpawnActor<ATextRenderActor>(timerTextClass, timerNewTransform, timerSpawnParams);
 	timerTextActor->SetActorRelativeRotation(FRotator(0, -180, 0));
+	if (timerTextActor) timerTextComponent = timerTextActor->GetTextRender();
+	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Press The Start Game Button To Start"));
 }
