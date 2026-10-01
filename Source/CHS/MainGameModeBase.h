@@ -45,17 +45,8 @@ public:
 	// Spawn a card at given location and return the card
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
-	// Main card game loop logic
-	void StartMainGameLoop(AGameStartButton* currGameStartButton);
-
 	// Get random card mesh from card array
 	UStaticMesh* GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray);
-
-	// Handle logic for when the player ran out of time
-	void TurnTimerFinished();
-
-	// Wait game state logic
-	void WaitForPlayerTurn();
 
 	/* --- Variables --- */
 	// Globally accessible character movement component
@@ -544,17 +535,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
 	int numPlayers = 1;
 
-	// Integer of timer per turn
-	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
-	float timerLength = 10.0f;
-
-	// Number of cards to be dealt in first hand
-	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
-	int cardsDealtFirst = 7;
-
-	// Timer handle for game timers
-	FTimerHandle timerHandle;
-
 	// Main character class
 	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
 	TSubclassOf<AMainCharacter> mainCharacterClass;
@@ -567,18 +547,6 @@ public:
 
 	// Array of main characters
 	TArray<TObjectPtr<AMainCharacter>> mainCharacterArray;
-
-	// Boolean for game is still running or not
-	bool bIsGameRunning = false;
-
-	// Boolean for if first deal of cards to players occured
-	bool bHasFirstDealOccured = false;
-
-	// Game state enum for tracking point in match
-	ECardGameState cardGameState;
-
-	// Game table text component
-	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
-	TObjectPtr<UTextRenderComponent> tableTextComponent;
+	
 
 };

@@ -10,6 +10,7 @@
 #include "Components/Border.h"
 #include "CardTableSlot.h"
 #include "GameStartButton.h"
+#include "CardGameTable.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -799,10 +800,15 @@ void AMainCharacter::InteractWithGameStartButton(AActor* actor)
 	// Cast actor to game start button 
 	AGameStartButton* interactedGameStartButton;
 	interactedGameStartButton = Cast<AGameStartButton>(actor);
+	AActor* owningActor = interactedGameStartButton->GetOwner();
+	ACardGameTable* owningGameTable;
+	if (!owningActor) return;
+	owningGameTable = Cast<ACardGameTable>(owningActor);
+	if (!owningGameTable) return;
 
 	// Start the game only if its not started
-	if (gameModeBase->bIsGameRunning) return; 
-	if (interactedGameStartButton) gameModeBase->StartMainGameLoop(interactedGameStartButton);
+	if (owningGameTable->bIsGameRunning) return;
+	if (interactedGameStartButton) owningGameTable->StartMainGameLoop(interactedGameStartButton);
 }
 
 // Add inventory widgets to arrays

@@ -7,7 +7,6 @@
 #include "Components/BoxComponent.h"
 #include "MainCharacter.h"
 #include "GameStartButton.h"
-#include "Kismet/GameplayStatics.h"
 #include "Components/TextRenderComponent.h"
 #include "GameFramework/Character.h"
 
@@ -50,12 +49,6 @@ void AMainGameModeBase::BeginPlay()
 void AMainGameModeBase::Tick(float deltatime)
 {
 	Super::Tick(deltatime);
-
-	// If game state is in waiting for player move, call wait state function logic
-	if (cardGameState == ECardGameState::GS_Wait)
-	{
-		WaitForPlayerTurn();
-	}
 }
 
 
@@ -249,56 +242,6 @@ ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVect
 	return newCard;
 }
 
-// Main card game loop logic
-void AMainGameModeBase::StartMainGameLoop(AGameStartButton* currGameStartButton)
-{
-	// If no player world or card mesh return
-	if (!playerWorld || !mainCharacter || !character)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Cannot start game because if (!playerWorld || !mainCharacter || !character) returned true"));
-		return;
-	}
-
-	// Get the number of players playing the game and start
-	UGameplayStatics::GetAllActorsOfClass(playerWorld, mainCharacterClass, mainCharacterActorArray);
-
-	for (AActor* actor : mainCharacterActorArray)
-	{
-		AMainCharacter* mc = Cast<AMainCharacter>(actor);
-		if (mc) mainCharacterArray.Push(mc);
-	}
-	if (mainCharacterArray.Num() <= 0) return;
-
-	bIsGameRunning = true;
-	currGameStartButton->SetGameHasStarted(true);
-	cardGameState = ECardGameState::GS_Start;
-
-	// Spawn a card for each player
-	UStaticMesh* mesh;
-	ACardActor* card;
-	AMainCharacter* tempMainCharacter;
-
-	for (int i = 0; i < mainCharacterArray.Num(); ++i)
-	{
-		for (int j = 0; j < cardsDealtFirst; ++j)
-		{
-			mesh = GetRandomCardMesh(specialDeck);
-			if (!mesh) continue;
-			card = SpawnCardActor(mesh, FVector(0, 0, 0));
-			tempMainCharacter = mainCharacterArray[i];
-			tempMainCharacter->InteractWithCard(card);
-		}
-	}
-
-	GetWorldTimerManager().SetTimer( timerHandle, this, &AMainGameModeBase::TurnTimerFinished, 5.0f, false);
-	cardGameState = ECardGameState::GS_Wait;
-	UE_LOG(LogTemp, Display, TEXT("Timer started"));
-
-	/*bIsGameRunning = false;
-	currGameStartButton->SetGameHasStarted(false);*/
-
-}
-
 // Get random card mesh from card array
 UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray)
 {
@@ -314,18 +257,4 @@ UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardA
 	if (!mesh) return nullptr;
 	return mesh;
 
-}
-
-// Handle logic for when timer runs out for player ( go to next player and reset timer )
-void AMainGameModeBase::TurnTimerFinished()
-{
-	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
-	cardGameState = ECardGameState::GS_Done;
-}
-
-// Called when waiting on player's turn
-void AMainGameModeBase::WaitForPlayerTurn()
-{
-	double timerText = GetWorldTimerManager().GetTimerRemaining(timerHandle);
-	/*tableTextComponent->SetText( FText::AsNumber(timerText) );*/
 }
