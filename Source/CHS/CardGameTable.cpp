@@ -6,6 +6,11 @@
 #include "CardTableSlot.h"
 #include "GameStartButton.h"
 #include "MainGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "MainCharacter.h"
+#include "CardActor.h"
+#include "Engine/TextRenderActor.h"
+#include "Components/TextRenderComponent.h"
 #include "PlayerChairSlot.h"
 
 // Sets default values
@@ -14,13 +19,15 @@ ACardGameTable::ACardGameTable()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Set up the table scene component and root component
+	// Set up the root component, table scene component, and timer text component 
 	rootMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Placeholder Root Component"));
 	SetRootComponent(rootMeshComponent);
 	cardTableMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Card Table Component"));
 	cardTableMeshComponent->SetupAttachment(RootComponent);
 	cardTableMeshComponent->SetRelativeScale3D(FVector(tableDefaultScaleX, tableDefaultScaleY, tableDefaultScaleZ));
 	cardTableMeshComponent->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+	//timerTextActor = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Timer Text Component"));
+	//timerTextActor->SetupAttachment(RootComponent);
 
 }
 
@@ -55,6 +62,7 @@ void ACardGameTable::BeginPlay()
 		currTableLocation = this->GetActorLocation();
 		SpawnGameStartButton();
 		SpawnPlayerChairs();
+		SpawnTimerText();
 	}
 
 }
@@ -63,6 +71,12 @@ void ACardGameTable::BeginPlay()
 void ACardGameTable::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// If game state is in waiting for player move, call wait state function logic
+	if (cardGameState == ECardGameState::GS_Wait)
+	{
+		WaitForPlayerTurn();
+	}
 
 }
 
@@ -102,7 +116,7 @@ void ACardGameTable::SpawnPlayerChairs()
 	{
 		if (i % 4 == 0)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector( ( tableSize.X / chairXSpawnMultiplier ) + chairXSpawnPadding, chairDistanceFromNeighbor, chairZSpawnPadding ));
+			chairNewTransform.SetLocation(currTableLocation + FVector(-chairDistanceFromNeighbor, (-tableSize.Y / chairXSpawnMultiplier) - chairYSpawnPadding, chairZSpawnPadding));
 		}
 		else if (i % 4 == 1)
 		{
@@ -111,15 +125,15 @@ void ACardGameTable::SpawnPlayerChairs()
 				chairDistanceFromNeighbor += distanceBetweenChairsIncrement;
 				ResizeTable();
 			}
-			chairNewTransform.SetLocation(currTableLocation + FVector( chairDistanceFromNeighbor, ( tableSize.Y / chairXSpawnMultiplier ) + chairYSpawnPadding, chairZSpawnPadding ));
+			chairNewTransform.SetLocation(currTableLocation + FVector( ( - tableSize.X / chairXSpawnMultiplier ) - chairXSpawnPadding, -chairDistanceFromNeighbor, chairZSpawnPadding));
 		}
 		else if (i % 4 == 2)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector( ( - tableSize.X / chairXSpawnMultiplier ) - chairXSpawnPadding, -chairDistanceFromNeighbor, chairZSpawnPadding));
+			chairNewTransform.SetLocation(currTableLocation + FVector((tableSize.X / chairXSpawnMultiplier) + chairXSpawnPadding, chairDistanceFromNeighbor, chairZSpawnPadding));
 		}
 		else if (i % 4 == 3)
 		{
-			chairNewTransform.SetLocation(currTableLocation + FVector( - chairDistanceFromNeighbor, ( - tableSize.Y / chairXSpawnMultiplier ) - chairYSpawnPadding, chairZSpawnPadding));
+			chairNewTransform.SetLocation(currTableLocation + FVector(chairDistanceFromNeighbor, (tableSize.Y / chairXSpawnMultiplier) + chairYSpawnPadding, chairZSpawnPadding));
 		}
 
 
@@ -136,3 +150,92 @@ void ACardGameTable::ResizeTable()
 	UE_LOG(LogTemp, Display, TEXT("Resizing table"));
 }
 
+// Main card game loop logic
+void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
+{
+	// If no player world or card mesh return
+	if (!mainGameModeBase || !mainGameModeBase->playerWorld || !mainGameModeBase->mainCharacter || !mainGameModeBase->character)
+	{
+		UE_LOG(LogTemp, Display, TEXT("Cannot start game, Func: StartMainGameLoop"));
+		return;
+	}
+
+	// Get the number of players playing the game and start
+	if (mainGameModeBase->mainCharacterActorArray.Num() > 0)
+	{
+		mainGameModeBase->mainCharacterActorArray.Empty();
+	}
+
+	UGameplayStatics::GetAllActorsOfClass(mainGameModeBase->playerWorld, mainGameModeBase->mainCharacterClass, mainGameModeBase->mainCharacterActorArray);
+
+	for (AActor* actor : mainGameModeBase->mainCharacterActorArray)
+	{
+		AMainCharacter* mc = Cast<AMainCharacter>(actor);
+		if (mc) mainGameModeBase->mainCharacterArray.Push(mc);
+	}
+	if (mainGameModeBase->mainCharacterArray.Num() <= 0) return;
+
+	bIsGameRunning = true;
+	currGameStartButton->SetGameHasStarted(true);
+	cardGameState = ECardGameState::GS_Start;
+
+	// Spawn a card for each player
+	UStaticMesh* mesh;
+	ACardActor* card;
+	AMainCharacter* tempMainCharacter;
+
+	for (int i = 0; i < mainGameModeBase->mainCharacterArray.Num(); ++i)
+	{
+		for (int j = 0; j < cardsDealtFirst; ++j)
+		{
+			mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
+			if (!mesh) continue;
+			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			tempMainCharacter = mainGameModeBase->mainCharacterArray[i];
+			tempMainCharacter->InteractWithCard(card);
+		}
+	}
+
+	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, 5.0f, false);
+	cardGameState = ECardGameState::GS_Wait;
+	UE_LOG(LogTemp, Display, TEXT("Timer started"));
+
+	/*bIsGameRunning = false;
+	currGameStartButton->SetGameHasStarted(false);*/
+
+}
+
+// Handle logic for when timer runs out for player ( go to next player and reset timer )
+void ACardGameTable::TurnTimerFinished()
+{
+	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
+	cardGameState = ECardGameState::GS_Done;
+}
+
+// Called when waiting on player's turn
+void ACardGameTable::WaitForPlayerTurn()
+{
+	float timerText = GetWorldTimerManager().GetTimerRemaining(timerHandle);
+	UTextRenderComponent* timerTextComponent = timerTextActor->GetTextRender();
+	if(timerTextComponent) timerTextComponent->SetText(FText::AsNumber(timerText));
+}
+
+// Spawn the timer text on the table in begin play
+void ACardGameTable::SpawnTimerText()
+{
+	// Setting properties for timer actor spawning
+	FTransform timerNewTransform = FTransform::Identity;
+	FActorSpawnParameters timerSpawnParams;
+	timerSpawnParams.Owner = this;
+	timerNewTransform.SetLocation(currTableLocation
+		+
+		FVector(
+			(-tableSize.X / timerXSpawnMultiplier) + timerXSpawnPadding * 0,
+			(-tableSize.Y / timerYSpawnMultiplier) + timerYSpawnPadding * 0,
+			(tableSize.Z / timerZSpawnMultiplier) + timerZSpawnPadding)
+	);
+
+	// Spawn the timer actor and rotate it correctly
+	timerTextActor = mainGameModeBase->playerWorld->SpawnActor<ATextRenderActor>(gameStartButtonClass, timerNewTransform, timerSpawnParams);
+	timerTextActor->SetActorRelativeRotation(FRotator(0, -180, 0));
+}

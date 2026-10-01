@@ -108,12 +108,6 @@ private:
 	// Handle loggic while hovering over an actor
 	void HandleHovering(AActor* actor);
 
-	// Handle loggic while hovering over a card
-	void CardHover(AActor* hoveredActor);
-
-	// Handle loggic while hovering over a chair
-	void ChairHover(AActor* hoveredActor);
-
 	// Increment through the cards up or down
 	void IncrementThroughCards(const int& increment);
 

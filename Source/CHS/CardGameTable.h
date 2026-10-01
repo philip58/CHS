@@ -4,12 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "CardTypeEnums.h"
 #include "CardGameTable.generated.h"
 
 class AGameStartButton;
 class ACardTableSlot;
 class AMainGameModeBase;
 class APlayerChairSlot;
+class ATextRenderActor;
 
 UCLASS()
 class CHS_API ACardGameTable : public AActor
@@ -28,6 +30,12 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	// Main card game loop logic
+	void StartMainGameLoop(AGameStartButton* currGameStartButton);
+
+	// Boolean for game is still running or not
+	bool bIsGameRunning = false;
+
 private:
 	/* --- Methods --- */
 	// Spawn game start button
@@ -38,6 +46,16 @@ private:
 
 	// Resize the table for more chairs
 	void ResizeTable();
+
+	// Handle logic for when the player ran out of time
+	void TurnTimerFinished();
+
+	// Wait game state logic
+	void WaitForPlayerTurn();
+
+	// Spawn the timer table text
+	void SpawnTimerText();
+
 
 	/* --- Variables --- */
 	// Place holder root component
@@ -145,4 +163,56 @@ private:
 	// Distance between chairs during spawning
 	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
 	float distanceBetweenChairsIncrement = 40;
+
+	//// Boolean for game is still running or not
+	//bool bIsGameRunning = false;
+
+	// Boolean for if first deal of cards to players occured
+	bool bHasFirstDealOccured = false;
+
+	// Game state enum for tracking point in match
+	ECardGameState cardGameState;
+
+	// Game table timer text actor
+	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
+	TObjectPtr<ATextRenderActor> timerTextActor;
+
+	// Table timer text class for spawning
+	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
+	TSubclassOf<ATextRenderActor> timerTextClass;
+
+	// Integer of timer per turn
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
+	float timerLength = 10.0f;
+
+	// Number of cards to be dealt in first hand
+	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
+	int cardsDealtFirst = 7;
+
+	// Timer handle for game timers
+	FTimerHandle timerHandle;
+
+	// timer x location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerXSpawnMultiplier = 1;
+
+	// timer y location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerYSpawnMultiplier = 1;
+
+	// timer z location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerZSpawnMultiplier = 1;
+
+	// timer x location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerXSpawnPadding = 0;
+
+	// timer y location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerYSpawnPadding = 0;
+
+	// timer z location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float timerZSpawnPadding = 50;
 };
