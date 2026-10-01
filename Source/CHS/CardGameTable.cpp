@@ -114,6 +114,7 @@ void ACardGameTable::SpawnPlayerChairs()
 	chairSpawnParams.Owner = this;
 	chairNewTransform = FTransform::Identity;
 	float chairDistanceFromNeighbor = 0;
+	float rotationZ = 0;
 
 	// Loop through for each chair and spawn/append to chair actor array
 	for (int i = 1; i <= numberOfChairs; ++i)
@@ -121,6 +122,7 @@ void ACardGameTable::SpawnPlayerChairs()
 		if (i % 4 == 0)
 		{
 			chairNewTransform.SetLocation(currTableLocation + FVector(chairDistanceFromNeighbor, (tableSize.Y / chairXSpawnMultiplier) + chairYSpawnPadding, chairZSpawnPadding));
+			rotationZ = -90;
 		}
 		else if (i % 4 == 1)
 		{
@@ -134,16 +136,18 @@ void ACardGameTable::SpawnPlayerChairs()
 		else if (i % 4 == 2)
 		{
 			chairNewTransform.SetLocation(currTableLocation + FVector(-chairDistanceFromNeighbor, (-tableSize.Y / chairXSpawnMultiplier) - chairYSpawnPadding, chairZSpawnPadding));
+			rotationZ = 90;
 		}
 		else if (i % 4 == 3)
 		{
 			chairNewTransform.SetLocation(currTableLocation + FVector((tableSize.X / chairXSpawnMultiplier) + chairXSpawnPadding, chairDistanceFromNeighbor, chairZSpawnPadding));
+			rotationZ = 180;
 		}
 
 
 		// Spawn the chair actor, rotate it, and append to the chairs array
 		spawnedPlayerChair = mainGameModeBase->playerWorld->SpawnActor<APlayerChairSlot>(playerChairClass, chairNewTransform, chairSpawnParams);
-		spawnedPlayerChair->SetActorRelativeRotation(FRotator(-90, 0, 0));
+		spawnedPlayerChair->SetActorRelativeRotation(FRotator(-90, 0, rotationZ));
 		playerChairMap.Add(i, spawnedPlayerChair);
 
 	}
@@ -172,10 +176,22 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 
 	UGameplayStatics::GetAllActorsOfClass(mainGameModeBase->playerWorld, mainGameModeBase->mainCharacterClass, mainGameModeBase->mainCharacterActorArray);
 
-	for (AActor* actor : mainGameModeBase->mainCharacterActorArray)
+	for (int i = 0; i < mainGameModeBase->mainCharacterActorArray.Num(); ++i)
 	{
-		AMainCharacter* mc = Cast<AMainCharacter>(actor);
+		AMainCharacter* mc = Cast<AMainCharacter>(mainGameModeBase->mainCharacterActorArray[i]);
 		if (mc) mainGameModeBase->mainCharacterArray.Push(mc);
+		if (!playerChairMap[i + 1]) continue;
+
+		// For each player that is not the main character, assign them a chair for turn swapping logic
+		if (i != 0)
+		{
+			playerChairMap[i+1]->SetCharacterInChair(mc);
+			playerChairMap[i+1]->SetIsSatIn(true);
+		}
+
+		// Set player id text for each chair
+		FString newChairStr = "Player " + FString::FromInt(i + 1);
+		playerChairMap[i + 1]->SetChairText(newChairStr);
 	}
 	if (mainGameModeBase->mainCharacterArray.Num() <= 0) return;
 
@@ -200,6 +216,9 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		}
 	}
 
+	int startingPlayerID = FMath::Floor(FMath::RandRange(1,numberOfChairs));
+	playerTurnID = startingPlayerID;
+
 	SetPlayerTurnTimer();
 
 	/*bIsGameRunning = false;
@@ -213,12 +232,40 @@ void ACardGameTable::TurnTimerFinished()
 	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
 	cardGameState = ECardGameState::GS_Done;
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
+	if (!playerChairMap[playerTurnID]) return;
+	playerChairMap[playerTurnID]->UnHighlightChairText();
+	if (playerTurnID == numberOfChairs)
+	{
+		playerTurnID = 1;
+	}
+	else
+	{
+		++playerTurnID;
+	}
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
 }
 
 // Set player turn wait timer 
 void ACardGameTable::SetPlayerTurnTimer()
 {
+	// If there was a previous turn that ran out of time, make that player draw a card
+	if (cardGameState == ECardGameState::GS_Done)
+	{
+		UStaticMesh* mesh;
+		ACardActor* card;
+		AMainCharacter* tempMainCharacter;
+		mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
+		if (mesh)
+		{
+			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
+			tempMainCharacter->InteractWithCard(card);
+		}
+	}
+
+	// Set the timer for the next turn length and highlight current turn player text
+	if (!playerChairMap[playerTurnID]) return;
+	playerChairMap[playerTurnID]->HighlightChairText();
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, turnTimerLength, false);
 	cardGameState = ECardGameState::GS_Wait;
 }

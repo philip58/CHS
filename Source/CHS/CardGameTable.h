@@ -86,7 +86,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Spawned Actor Classes")
 	TSubclassOf<APlayerChairSlot> playerChairClass;
 
-	// Actor for player chair
+	// Map for player chair ID integer and player chair associated with that ID
 	TMap<int, TObjectPtr<APlayerChairSlot>> playerChairMap;
 
 	// Number of player chairs for the table
@@ -228,5 +228,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
 	float timerZSpawnPadding = 40;
 
-	
+	// Current player turn ID 
+	int playerTurnID = 1;
 };
