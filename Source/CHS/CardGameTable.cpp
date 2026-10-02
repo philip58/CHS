@@ -234,14 +234,6 @@ void ACardGameTable::TurnTimerFinished()
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
 	if (!playerChairMap[playerTurnID]) return;
 	playerChairMap[playerTurnID]->UnHighlightChairText();
-	if (playerTurnID == numberOfChairs)
-	{
-		playerTurnID = 1;
-	}
-	else
-	{
-		++playerTurnID;
-	}
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
 }
 
@@ -260,6 +252,16 @@ void ACardGameTable::SetPlayerTurnTimer()
 			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 			tempMainCharacter->InteractWithCard(card);
+		}
+
+		// Increment the turn to the next player
+		if (playerTurnID == numberOfChairs)
+		{
+			playerTurnID = 1;
+		}
+		else
+		{
+			++playerTurnID;
 		}
 	}
 

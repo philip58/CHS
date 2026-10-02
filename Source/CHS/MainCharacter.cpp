@@ -462,9 +462,13 @@ void AMainCharacter::LeaveChair()
 	// Set player left chair variables
 	bIsPlayerSitting = false;
 	playerChair->SetIsSatIn(false);
-	playerChair->SetCharacterInChair(nullptr);
-	playerChair = nullptr;
-
+	AActor* chairOwner = playerChair->GetOwner();
+	ACardGameTable* chairOwningTable = Cast<ACardGameTable>(chairOwner);
+	if (chairOwningTable && !chairOwningTable->bIsGameRunning)
+	{
+		playerChair->SetCharacterInChair(nullptr);
+		playerChair = nullptr;
+	}
 	// Re-enable character movement
 	if (gameModeBase && gameModeBase->playerMovementComponent)
 	{
