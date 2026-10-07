@@ -58,10 +58,16 @@ public:
 	void SetChairText(const FString& str);
 
 	// Highlight chair text 
-	void HighlightChairText();
+	void HighlightChairTextMaterial();
 
 	// Highlight chair text 
-	void UnHighlightChairText();
+	void UnHighlightChairTextMaterial();
+
+	// Highlight chair text 
+	void HighlightChairTextColor();
+
+	// Highlight chair text 
+	void UnHighlightChairTextColor();
 private:
 	/* --- Methods --- */
 
@@ -99,4 +105,12 @@ private:
 	// Unhighlighted text material when not player's turn
 	UPROPERTY(EditAnywhere)
 	UMaterialInterface* unHighlightMaterial;
+
+	// Text highlighted color 
+	UPROPERTY(EditAnywhere)
+	FColor highlightColor;
+
+	// Text unhighlighted color 
+	UPROPERTY(EditAnywhere)
+	FColor unHighlightColor;
 };

@@ -233,7 +233,7 @@ void ACardGameTable::TurnTimerFinished()
 	cardGameState = ECardGameState::GS_Done;
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
 	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->UnHighlightChairText();
+	playerChairMap[playerTurnID]->UnHighlightChairTextColor();
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
 }
 
@@ -251,7 +251,7 @@ void ACardGameTable::SetPlayerTurnTimer()
 		{
 			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
-			tempMainCharacter->InteractWithCard(card);
+			if(tempMainCharacter) tempMainCharacter->InteractWithCard(card);
 		}
 
 		// Increment the turn to the next player
@@ -267,7 +267,7 @@ void ACardGameTable::SetPlayerTurnTimer()
 
 	// Set the timer for the next turn length and highlight current turn player text
 	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->HighlightChairText();
+	playerChairMap[playerTurnID]->HighlightChairTextColor();
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, turnTimerLength, false);
 	cardGameState = ECardGameState::GS_Wait;
 }
