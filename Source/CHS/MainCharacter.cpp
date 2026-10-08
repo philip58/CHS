@@ -3,6 +3,7 @@
 
 #include "MainCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/ArrowComponent.h"
 #include "CardActor.h"
 #include "PlayerChairSlot.h"
 #include "PlayerHUD.h"
@@ -30,13 +31,16 @@ AMainCharacter::AMainCharacter()
 	cardPlaceHolderSocket->SetRelativeLocation(FVector(75.0, 0.0, 40.0));
 	cardPlaceHolderSocket->SetRelativeRotation(FRotator(-20.0, 0.0, 0.0));
 
+	// Set playerMesh
+	playerMesh = this->GetMesh();
+
 }
 
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// Get temporary world variable and use it to set the gamemode base to the custom MainGameModeBase
 	TWeakObjectPtr<UWorld> tempWorld = GetWorld();
 	if (tempWorld != nullptr)
@@ -92,7 +96,7 @@ void AMainCharacter::Tick(float deltaTime)
 	Super::Tick(deltaTime);
 
 	// Check if hovering over an actor or not
-	if ( IsValid( actorInView = GetLineTraceHitActor() ) )
+	if ( !bIsInventoryExpanded && IsValid( actorInView = GetLineTraceHitActor() ) )
 	{
 		// If hovering over something, call the hovering method  
 		HandleHovering(actorInView);
@@ -135,14 +139,14 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("SelectInventorySlot4", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot4);
 	playerInputComponent->BindAction("SelectInventorySlot5", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot5);
 	playerInputComponent->BindAction("SelectInventorySlot6", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot6);
-	//playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
+	playerInputComponent->BindAction("ToggleCardInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleCardInventory); 
 }
 
 // Move the player forward
-void AMainCharacter::WalkForward(float input )
+void AMainCharacter::WalkForward(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -155,7 +159,7 @@ void AMainCharacter::WalkForward(float input )
 void AMainCharacter::WalkBackwards(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -168,7 +172,7 @@ void AMainCharacter::WalkBackwards(float input)
 void AMainCharacter::WalkLeft(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -181,7 +185,7 @@ void AMainCharacter::WalkLeft(float input)
 void AMainCharacter::WalkRight(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -193,6 +197,9 @@ void AMainCharacter::WalkRight(float input)
 // Player jump
 void AMainCharacter::PlayerJump()
 {
+	// No jumping when inventory is open
+	if (bIsInventoryExpanded) return;
+
 	// If seated, leave chair instead of jumping
 	if (bIsPlayerSitting)
 	{
@@ -242,6 +249,9 @@ void AMainCharacter::StopSprinting()
 // Handle player interaction (E key) 
 void AMainCharacter::Interact()
 {
+	// Return if card inventory expanded
+	if (bIsInventoryExpanded) return;
+
 	// Game mode base is necessary for getting the stored player/world variables
 	if (!gameModeBase)
 	{
@@ -317,6 +327,7 @@ void AMainCharacter::Throw()
 // When the player scrolls up, iterate positively through the inventory
 void AMainCharacter::ScrollUp()
 {
+	if (bIsInventoryExpanded) return;
 	IncrementThroughInventory(1);
 	//IncrementThroughCards(1);
 }
@@ -324,6 +335,7 @@ void AMainCharacter::ScrollUp()
 // When the player scrolls up, iterate negatively through the inventory
 void AMainCharacter::ScrollDown()
 {
+	if (bIsInventoryExpanded) return;
 	IncrementThroughInventory(-1);
 	//IncrementThroughCards(-1);
 }
@@ -360,10 +372,11 @@ void AMainCharacter::EquipCard(ACardActor* cardActor)
 // Handle the card unequipping logic and maintain relevant variables, current equipped card, and equipped card position
 void AMainCharacter::UnequipCard(ACardActor* cardActor)
 {
-	equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-	equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
-	equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
-	equippedCard->SetIsCardEquipped(false);
+	AActor* attachedActor = cardActor->GetAttachParentActor();
+	if(attachedActor) cardActor->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	cardActor->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
+	cardActor->SetActorRelativeRotation(FRotator::ZeroRotator);
+	cardActor->SetIsCardEquipped(false);
 }
 
 // Interact with the hit card actor
@@ -438,6 +451,7 @@ void AMainCharacter::InteractWithChair(AActor* interactedActor)
 	{
 		playerChair->SetIsSatIn(true);
 		playerChair->SetCharacterInChair(this);
+		bStopCharacterMovement = true;
 		bIsPlayerSitting = true;
 		if (gameModeBase && gameModeBase->playerMovementComponent)
 		{
@@ -460,6 +474,7 @@ void AMainCharacter::LeaveChair()
 	this->SetActorLocation(this->GetActorLocation() + FVector(0, 0, distanceFromChair) );
 	
 	// Set player left chair variables
+	bStopCharacterMovement = false;
 	bIsPlayerSitting = false;
 	playerChair->SetIsSatIn(false);
 	AActor* chairOwner = playerChair->GetOwner();
@@ -592,7 +607,7 @@ void AMainCharacter::IncrementThroughCards(const int& increment)
 	}
 
 	// Depending on if decrementing or incrementing, determine next card inventory position
-	int tempPos;
+	int tempPos = 0;
 	if (increment > 0)
 	{
 		// Increment
@@ -638,7 +653,7 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 	}
 
 	// Depending on if decrementing or incrementing, determine next inventory position
-	int tempPos;
+	int tempPos = 0;
 	if (increment > 0)
 	{
 		// Increment
@@ -833,4 +848,66 @@ void AMainCharacter::PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud)
 	inventorySlotArray.Push(hud->inventorySlot4);
 	inventorySlotArray.Push(hud->inventorySlot5);
 	inventorySlotArray.Push(hud->inventorySlot6);
+}
+
+// Toggle the card inventory on press of tab key, expands all cards for player
+void AMainCharacter::ToggleCardInventory()
+{
+	bIsInventoryExpanded = !bIsInventoryExpanded;
+
+	// Return if card inventory empty
+	if (cardsInInventory.Num() <= 0)
+	{
+		return;
+	}
+
+	// Helper variables 
+	float tempHorizontalOffset = horizontalInventoryOffset;
+	float tempForwardOffset = forwardInventoryOffset;
+	if (!cardPlaceHolderSocket) return;
+	if (!playerCamera) return;
+	FVector tempCamLocation = playerCamera->GetComponentLocation();
+	FVector tempCamForwardVector = playerCamera->GetForwardVector();
+	//tempCamForwardVector += GetActorLocation();
+	AActor* tempActorCast = Cast<AActor>(this);
+	
+	// If bool is true, then we expand the inventory to show all the cards and stop player movement
+	if (bIsInventoryExpanded)
+	{
+		bStopCharacterMovement = true;
+		ToggleCardHide(true);
+		
+		// Alternate between setting location left/right of origin
+		for (int i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			if (!cardsInInventory[i]) continue;
+			cardsInInventory[i]->PlaceCardInTableSlot(tempActorCast);
+			if (i == 0)
+			{
+				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(0,0, verticalInventoryOffset));
+			}
+			else if (i % 2 == 0)
+			{
+				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(tempForwardOffset, tempHorizontalOffset, verticalInventoryOffset));
+			}
+			else
+			{
+				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(-tempForwardOffset, -tempHorizontalOffset, verticalInventoryOffset));
+			}
+			cardsInInventory[i]->SetActorRotation(FRotator(0,0,-180));
+			tempHorizontalOffset += horizontalInventoryOffset;
+			tempForwardOffset += forwardInventoryOffset;
+		}
+	}
+	// If bool is false, put all the cards away and equip the current card in inventory and resume character movement
+	else
+	{
+		bStopCharacterMovement = false;
+		for (int i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			UnequipCard(cardsInInventory[i]);
+		}
+
+		EquipCard(cardsInInventory[equippedCardPos]);
+	}
 }

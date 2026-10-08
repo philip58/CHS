@@ -221,9 +221,6 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 
 	SetPlayerTurnTimer();
 
-	/*bIsGameRunning = false;
-	currGameStartButton->SetGameHasStarted(false);*/
-
 }
 
 // Handle logic for when timer runs out for player ( go to next player and reset timer )

@@ -147,6 +147,9 @@ private:
 	// Add inventory widgets to arrays
 	void PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud);
 
+	// Toggle card inventory with press of tab button
+	void ToggleCardInventory();
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -168,7 +171,7 @@ private:
 
 	// Player mesh component
 	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh Properties")
-	UStaticMeshComponent* playerMesh;
+	USkeletalMeshComponent* playerMesh;
 
 	// Player sprint speed
 	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
@@ -202,8 +205,11 @@ private:
 	// Chair that player is sitting in
 	APlayerChairSlot* playerChair;
 
-	// Boolean if player is sitting
+	// Boolean if player is sitting in a chair
 	bool bIsPlayerSitting = false;
+
+	// Boolean if player should stop moving
+	bool bStopCharacterMovement = false;
 
 	// Distance to move away from chair after exiting
 	UPROPERTY(EditAnywhere)
@@ -286,5 +292,32 @@ private:
 
 	// Player controller
 	TObjectPtr<APlayerController> playerController;
+
+	// Inventory on boolean, if true, inventory was turned on by pressing tab
+	bool bIsInventoryExpanded = false;
+
+	// Horizontal inventory expand offset, aka how left/right the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float horizontalInventoryOffset = 5.0f;
+
+	// Forward inventory expand offset, aka how front/back the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float forwardInventoryOffset = 0.1f;
+
+	// Vertical inventory expand offset, aka how up/down the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float verticalInventoryOffset = 50.0f;
+
+	// Inventory distance from player on expansion X
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float inventoryDistanceFromPlayerX = 50.0f;
+
+	// Inventory distance from player on expansion Y
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float inventoryDistanceFromPlayerY = 50.0f;
+
+	// Inventory distance from player on expansion Z
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float inventoryDistanceFromPlayerZ = 50.0f;
 
 };
