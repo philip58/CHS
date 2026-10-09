@@ -249,6 +249,10 @@ void ACardGameTable::SetPlayerTurnTimer()
 			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 			if(tempMainCharacter) tempMainCharacter->InteractWithCard(card);
+
+			// Toggle inventory twice to update the new card in the inventory
+			tempMainCharacter->ToggleCardInventory();
+			tempMainCharacter->ToggleCardInventory();
 		}
 
 		// Increment the turn to the next player

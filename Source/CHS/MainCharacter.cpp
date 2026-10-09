@@ -4,6 +4,7 @@
 #include "MainCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/ArrowComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "CardActor.h"
 #include "PlayerChairSlot.h"
 #include "PlayerHUD.h"
@@ -853,7 +854,14 @@ void AMainCharacter::PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud)
 // Toggle the card inventory on press of tab key, expands all cards for player
 void AMainCharacter::ToggleCardInventory()
 {
-	bIsInventoryExpanded = !bIsInventoryExpanded;
+	if (bIsInventoryExpanded)
+	{
+		bIsInventoryExpanded = false;
+	} 
+	else
+	{
+		bIsInventoryExpanded = true;
+	}
 
 	// Return if card inventory empty
 	if (cardsInInventory.Num() <= 0)
@@ -861,40 +869,62 @@ void AMainCharacter::ToggleCardInventory()
 		return;
 	}
 
-	// Helper variables 
-	float tempHorizontalOffset = horizontalInventoryOffset;
-	float tempForwardOffset = forwardInventoryOffset;
-	if (!cardPlaceHolderSocket) return;
-	if (!playerCamera) return;
-	FVector tempCamLocation = playerCamera->GetComponentLocation();
-	FVector tempCamForwardVector = playerCamera->GetForwardVector();
-	//tempCamForwardVector += GetActorLocation();
-	AActor* tempActorCast = Cast<AActor>(this);
-	
 	// If bool is true, then we expand the inventory to show all the cards and stop player movement
 	if (bIsInventoryExpanded)
 	{
+		// Helper variables 
+		float tempHorizontalOffset = horizontalInventoryOffset;
+		float tempForwardOffset = forwardInventoryOffset;
+		float tempVerticalOffset = verticalInventoryOffset;
+		if (!cardPlaceHolderSocket) return;
+		if (!playerCamera) return;
+		FVector tempCamLocation = playerCamera->GetComponentLocation();
+		FVector tempCamForwardVector = playerCamera->GetForwardVector();
+		FVector tempCamRightVector = playerCamera->GetRightVector();
+		FVector tempCamUpVector = playerCamera->GetUpVector();
+		AActor* tempActorCast = Cast<AActor>(this);
+
+		// Keep the inventory offsets horizontal relative to the camera
+		FRotator tempCamYawRotation(0.0f, playerCamera->GetComponentRotation().Yaw, 0.0f);
+		FVector tempHorizontalForwardVector = tempCamYawRotation.Vector();
+		FVector tempHorizontalRightVector = FRotationMatrix(tempCamYawRotation).GetUnitAxis(EAxis::Y);
+
 		bStopCharacterMovement = true;
 		ToggleCardHide(true);
-		
+
 		// Alternate between setting location left/right of origin
 		for (int i = 0; i < cardsInInventory.Num(); ++i)
 		{
 			if (!cardsInInventory[i]) continue;
 			cardsInInventory[i]->PlaceCardInTableSlot(tempActorCast);
-			if (i == 0)
+			if (i == 0 || i % 7 == 0)
 			{
-				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(0,0, verticalInventoryOffset));
+				tempHorizontalOffset = horizontalInventoryOffset;
+				tempForwardOffset = forwardInventoryOffset;
+				if(i % 7 == 0) tempVerticalOffset -= verticalInventoryOffset;
+
+				cardsInInventory[i]->SetActorLocation(
+				tempCamLocation + (tempHorizontalForwardVector * inventoryDistanceFromPlayer) +
+				FVector::UpVector * tempVerticalOffset);
 			}
 			else if (i % 2 == 0)
 			{
-				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(tempForwardOffset, tempHorizontalOffset, verticalInventoryOffset));
+				cardsInInventory[i]->SetActorLocation(
+					tempCamLocation + (tempHorizontalForwardVector * inventoryDistanceFromPlayer) +
+					(tempHorizontalForwardVector * tempForwardOffset) +
+					(tempHorizontalRightVector * (tempHorizontalOffset - horizontalInventoryOffset) ) +
+					FVector::UpVector * tempVerticalOffset);
 			}
 			else
 			{
-				cardsInInventory[i]->SetActorRelativeLocation(tempCamLocation + (tempCamForwardVector * FVector(inventoryDistanceFromPlayerX, 0, 0)) + FVector(-tempForwardOffset, -tempHorizontalOffset, verticalInventoryOffset));
+				cardsInInventory[i]->SetActorLocation(
+					tempCamLocation + (tempHorizontalForwardVector * inventoryDistanceFromPlayer) -
+					(tempHorizontalForwardVector * tempForwardOffset) -
+					(tempHorizontalRightVector * tempHorizontalOffset) +
+					FVector::UpVector * tempVerticalOffset);
 			}
-			cardsInInventory[i]->SetActorRotation(FRotator(0,0,-180));
+			FRotator newCardRotation = UKismetMathLibrary::FindLookAtRotation(cardsInInventory[i]->GetActorLocation(), this->GetActorLocation());
+			cardsInInventory[i]->SetActorRotation(this->GetActorRotation() + FRotator(0, 180, 0));
 			tempHorizontalOffset += horizontalInventoryOffset;
 			tempForwardOffset += forwardInventoryOffset;
 		}

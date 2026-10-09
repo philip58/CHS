@@ -89,10 +89,16 @@ public:
 	// Player leave chair
 	void LeaveChair();
 
+	// Toggle card inventory with press of tab button
+	void ToggleCardInventory();
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* cardPlaceHolderSocket;
+
+	// Inventory on boolean, if true, inventory was turned on by pressing tab
+	bool bIsInventoryExpanded = false;
 
 private:
 	/* --- Methods--- */
@@ -146,9 +152,6 @@ private:
 
 	// Add inventory widgets to arrays
 	void PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud);
-
-	// Toggle card inventory with press of tab button
-	void ToggleCardInventory();
 
 	/* --- Variables--- */
 	// Player camera (viewport)
@@ -293,9 +296,6 @@ private:
 	// Player controller
 	TObjectPtr<APlayerController> playerController;
 
-	// Inventory on boolean, if true, inventory was turned on by pressing tab
-	bool bIsInventoryExpanded = false;
-
 	// Horizontal inventory expand offset, aka how left/right the card will be moved from origin when inventory is on 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
 	float horizontalInventoryOffset = 5.0f;
@@ -308,16 +308,8 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
 	float verticalInventoryOffset = 50.0f;
 
-	// Inventory distance from player on expansion X
+	// Inventory distance from player on expansion
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
-	float inventoryDistanceFromPlayerX = 50.0f;
-
-	// Inventory distance from player on expansion Y
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
-	float inventoryDistanceFromPlayerY = 50.0f;
-
-	// Inventory distance from player on expansion Z
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
-	float inventoryDistanceFromPlayerZ = 50.0f;
+	float inventoryDistanceFromPlayer = 50.0f;
 
 };
