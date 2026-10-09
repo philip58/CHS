@@ -12,6 +12,7 @@ class ACardActor;
 class APlayerChairSlot;
 class UPlayerHUD;
 class AGameStartButton;
+class ACardGameTable;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -91,6 +92,9 @@ public:
 
 	// Toggle card inventory with press of tab button
 	void ToggleCardInventory();
+
+	// Set the card game table the player is playing at
+	void SetCardGameTable(ACardGameTable* newCardGameTable);
 
 	/* --- Variables--- */ 
 	// Card placeholder socket
@@ -302,14 +306,20 @@ private:
 
 	// Forward inventory expand offset, aka how front/back the card will be moved from origin when inventory is on 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
-	float forwardInventoryOffset = 0.1f;
+	float forwardInventoryOffset = 0.04f;
 
 	// Vertical inventory expand offset, aka how up/down the card will be moved from origin when inventory is on 
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
-	float verticalInventoryOffset = 50.0f;
+	float verticalInventoryOffset = -10.0f;
 
 	// Inventory distance from player on expansion
 	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
 	float inventoryDistanceFromPlayer = 50.0f;
 
+	// Card game table pointer aka current table player is playing a game at
+	TObjectPtr<ACardGameTable> cardGameTable;
+
+	// Distance between each row in the card inventory 
+	UPROPERTY(EditAnywhere, Category = "Inventory Attributes")
+	float cardInventoryRowDistance = 10.0f;
 };

@@ -37,6 +37,10 @@ public:
 	// Boolean for game is still running or not
 	bool bIsGameRunning = false;
 
+	// Variable for max cards per inventory row
+	UPROPERTY(EditAnywhere)
+	int maxCardsPerInventoryRow = 7;
+
 private:
 	/* --- Methods --- */
 	// Spawn game start button
@@ -59,7 +63,6 @@ private:
 
 	// Set the timer for the players turn
 	void SetPlayerTurnTimer();
-
 
 
 	/* --- Variables --- */

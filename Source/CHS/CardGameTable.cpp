@@ -178,8 +178,11 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 
 	for (int i = 0; i < mainGameModeBase->mainCharacterActorArray.Num(); ++i)
 	{
+		// Get the player and push them to the array and set their game table to this
 		AMainCharacter* mc = Cast<AMainCharacter>(mainGameModeBase->mainCharacterActorArray[i]);
-		if (mc) mainGameModeBase->mainCharacterArray.Push(mc);
+		if (!mc) continue;
+		mainGameModeBase->mainCharacterArray.Push(mc);
+		mc->SetCardGameTable(this);
 		if (!playerChairMap[i + 1]) continue;
 
 		// For each player that is not the main character, assign them a chair for turn swapping logic
@@ -192,6 +195,7 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		// Set player id text for each chair
 		FString newChairStr = "Player " + FString::FromInt(i + 1);
 		playerChairMap[i + 1]->SetChairText(newChairStr);
+		
 	}
 	if (mainGameModeBase->mainCharacterArray.Num() <= 0) return;
 
@@ -248,11 +252,16 @@ void ACardGameTable::SetPlayerTurnTimer()
 		{
 			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
-			if(tempMainCharacter) tempMainCharacter->InteractWithCard(card);
+			
+			if (tempMainCharacter)
+			{
+				tempMainCharacter->InteractWithCard(card);
 
-			// Toggle inventory twice to update the new card in the inventory
-			tempMainCharacter->ToggleCardInventory();
-			tempMainCharacter->ToggleCardInventory();
+				// Toggle inventory twice to update the new card in the inventory
+				tempMainCharacter->ToggleCardInventory();
+				tempMainCharacter->ToggleCardInventory();
+			}
+			
 		}
 
 		// Increment the turn to the next player
