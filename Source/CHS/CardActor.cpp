@@ -90,6 +90,12 @@ void ACardActor::SetIsCardEquipped(const bool& isEquipped)
 	bIsCardEquipped = isEquipped;
 }
 
+// Get is card equipped boolean
+bool ACardActor::GetIsCardEquipped() const
+{
+	return bIsCardEquipped;
+}
+
 // Collision overlap method for card placing on table slot
 void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {

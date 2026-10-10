@@ -36,6 +36,9 @@ public:
 	// Set is card equipped boolean
 	void SetIsCardEquipped(const bool& isEquipped);
 
+	// Get is card equipped boolean
+	bool GetIsCardEquipped() const;
+
 	// Player unequip card
 	void UnequipCard();
 

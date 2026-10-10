@@ -10,6 +10,8 @@
 #include "PlayerHUD.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "Components/TextBlock.h"
+#include "Components/Button.h"
 #include "CardTableSlot.h"
 #include "GameStartButton.h"
 #include "CardGameTable.h"
@@ -141,6 +143,7 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("SelectInventorySlot5", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot5);
 	playerInputComponent->BindAction("SelectInventorySlot6", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot6);
 	playerInputComponent->BindAction("ToggleCardInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleCardInventory); 
+	playerInputComponent->BindAction("Menu", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleMenu);
 }
 
 // Move the player forward
@@ -218,19 +221,21 @@ void AMainCharacter::PlayerJump()
 // Player looking left and right
 void AMainCharacter::LookHorizontally(float input)
 {
+	if (bStopCharacterLooking) return;
 	AddControllerYawInput(input);
 }
 
 // Player looking up and down
 void AMainCharacter::LookVertically(float input)
 {
+	if (bStopCharacterLooking) return;
 	AddControllerPitchInput(-input);
 }
 
 // Make the player faster if sprinting
 void AMainCharacter::StartSprinting()
 {
-	//bIsPlayerSprinting = true;
+	if (bStopCharacterMovement) return;
 	if (gameModeBase)
 	{
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = sprintSpeed;
@@ -410,7 +415,7 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	{
 		if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 		{
-			playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
+			playerHUD->SetHUDImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
 			playerHUD->SetInventorySlotColor
 			(
 				inventorySlotArray[inventoryPos],
@@ -543,8 +548,8 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 // Handle logic when hovering over an actor with line trace
 void AMainCharacter::HandleHovering(AActor* hoveredActor)
 {
-	// Return if no gamemode base and no HUD
-	if (!gameModeBase || !playerHUD)
+	// Return if no gamemode base and no HUD and if HUD is off
+	if (!gameModeBase || !playerHUD || !bIsHUDToggled)
 	{
 		return;
 	}
@@ -552,7 +557,12 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
-		playerHUD->SetInteractPopupText("Press E To Pick Up");
+		ACardActor* tempCardActor = Cast<ACardActor>(hoveredActor);
+		if (!tempCardActor) return;
+		if (tempCardActor && !tempCardActor->GetIsCardEquipped())
+		{
+			playerHUD->SetInteractPopupText("Press E To Pick Up");
+		}
 		return;
 	}
 
@@ -799,7 +809,7 @@ void AMainCharacter::UnequipAndRemoveCard()
 	// If inventory is empty, remove card image from inventory ui
 	if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 	{
-		playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
+		playerHUD->SetHUDImage(inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
 		playerHUD->SetInventorySlotColor
 		(
 			inventorySlotArray[inventoryPos],
@@ -937,6 +947,9 @@ void AMainCharacter::ToggleCardInventory()
 			tempHorizontalOffset += horizontalInventoryOffset;
 			tempForwardOffset += forwardInventoryOffset;
 		}
+
+		// Show the mouse cursor
+		//ShowMouseCursor();
 	}
 	// If bool is false, put all the cards away and equip the current card in inventory and resume character movement
 	else
@@ -948,6 +961,9 @@ void AMainCharacter::ToggleCardInventory()
 		}
 
 		EquipCard(cardsInInventory[equippedCardPos]);
+
+		// Hide the mouse cursor
+		//HideMouseCursor();
 	}
 }
 
@@ -955,4 +971,125 @@ void AMainCharacter::ToggleCardInventory()
 void AMainCharacter::SetCardGameTable(ACardGameTable* newCardGameTable)
 {
 	if(newCardGameTable) cardGameTable = newCardGameTable;
+}
+
+// Show the mouse cursor
+void AMainCharacter::ShowMouseCursor()
+{
+	if (!playerController) return;
+
+	playerController->bShowMouseCursor = true;
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(
+		EMouseLockMode::DoNotLock
+	);
+
+	playerController->SetInputMode(InputMode);
+}
+
+// Hide the mouse cursor
+void AMainCharacter::HideMouseCursor()
+{
+	if (!playerController) return;
+
+	playerController->bShowMouseCursor = false;
+
+	FInputModeGameOnly InputMode;
+	playerController->SetInputMode(InputMode);
+}
+
+// Toggle menu with escape 
+void AMainCharacter::ToggleMenu()
+{
+	if (!bIsMenuToggled)
+	{
+		ShowMouseCursor();
+		bStopCharacterMovement = true;
+		bIsMenuToggled = true;
+		bStopCharacterLooking = true;
+		HideHUD();
+	}
+	else
+	{
+		HideMouseCursor();
+		bStopCharacterMovement = false;
+		bIsMenuToggled = false;
+		bStopCharacterLooking = false;
+		ShowHUD();
+	}
+}
+
+// Toggle HUD show
+void AMainCharacter::ShowHUD()
+{
+	// Return if no hud
+	if (!playerHUD) return;
+
+	// Hide/show hud widgets
+	if (!bIsHUDToggled)
+	{
+		// Show the HUD
+		if (playerHUD->crossHair) playerHUD->crossHair->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage1) playerHUD->inventoryImage1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage2) playerHUD->inventoryImage2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage3) playerHUD->inventoryImage3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage4) playerHUD->inventoryImage4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage5) playerHUD->inventoryImage5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage6) playerHUD->inventoryImage6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot1) playerHUD->inventorySlot1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot2) playerHUD->inventorySlot2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot3) playerHUD->inventorySlot3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot4) playerHUD->inventorySlot4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot5) playerHUD->inventorySlot5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot6) playerHUD->inventorySlot6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner1) playerHUD->inventorySlotInner1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner2) playerHUD->inventorySlotInner2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner3) playerHUD->inventorySlotInner3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner4) playerHUD->inventorySlotInner4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner5) playerHUD->inventorySlotInner5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner6) playerHUD->inventorySlotInner6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->menuBorder) playerHUD->menuBorder->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButtonText) playerHUD->quitButtonText->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetIsEnabled(false);
+		bIsHUDToggled = true;
+	}
+}
+
+// Toggle HUD hide
+void AMainCharacter::HideHUD()
+{
+	// Return if no hud
+	if (!playerHUD) return;
+
+	if (bIsHUDToggled)
+	{
+		// Hide the HUD
+		if(playerHUD->crossHair) playerHUD->crossHair->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage1) playerHUD->inventoryImage1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage2) playerHUD->inventoryImage2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage3) playerHUD->inventoryImage3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage4) playerHUD->inventoryImage4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage5) playerHUD->inventoryImage5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage6) playerHUD->inventoryImage6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot1) playerHUD->inventorySlot1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot2) playerHUD->inventorySlot2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot3) playerHUD->inventorySlot3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot4) playerHUD->inventorySlot4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot5) playerHUD->inventorySlot5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot6) playerHUD->inventorySlot6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner1) playerHUD->inventorySlotInner1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner2) playerHUD->inventorySlotInner2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner3) playerHUD->inventorySlotInner3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner4) playerHUD->inventorySlotInner4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner5) playerHUD->inventorySlotInner5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner6) playerHUD->inventorySlotInner6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->quitButtonText) playerHUD->quitButtonText->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->menuBorder) playerHUD->menuBorder->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetIsEnabled(true);
+		if (playerHUD->interactPopupText) playerHUD->SetInteractPopupText("");
+		bIsHUDToggled = false;
+	}
 }

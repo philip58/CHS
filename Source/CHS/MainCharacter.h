@@ -157,6 +157,21 @@ private:
 	// Add inventory widgets to arrays
 	void PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud);
 
+	// Show the mouse cursor
+	void ShowMouseCursor();
+
+	// Hide the mouse cursor
+	void HideMouseCursor();
+
+	// Toggle menu with escape key 
+	void ToggleMenu();
+
+	// Toggle HUD Show
+	void ShowHUD();
+
+	// Toggle HUD Hide
+	void HideHUD();
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -218,6 +233,9 @@ private:
 	// Boolean if player should stop moving
 	bool bStopCharacterMovement = false;
 
+	// Boolean if player should stop looking
+	bool bStopCharacterLooking = false;
+
 	// Distance to move away from chair after exiting
 	UPROPERTY(EditAnywhere)
 	float distanceFromChair = 10.0f;
@@ -237,43 +255,47 @@ private:
 	bool bIsCardVisible = true;
 
 	// Card image png for inventory
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
 	UTexture2D* cardInventoryImg;
 
 	// Blank image png for clearing inventory img
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
 	UTexture2D* blankInventoryImg;
 
+	// Image png for HUD crosshair
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
+	UTexture2D* crossHairImg;
+
 	// Red (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float rDefaultColorInventorySlot = .015f;
 
 	// Green (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float gDefaultColorInventorySlot = .015f;
 
 	// Blue (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float bDefaultColorInventorySlot = .015f;
 
 	// Opacity (RBGA) in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float aDefaultColorInventorySlot = .2f;
 
 	// Red (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float rSelectedColorInventorySlot = 1.0f;
 
 	// Green (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float gSelectedColorInventorySlot = 1.0f;
 
 	// Blue (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float bSelectedColorInventorySlot = 1.0f;
 
 	// Opacity (RBGA) in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float aSelectedColorInventorySlot = .6f;
 
 	// Inventory size
@@ -322,4 +344,10 @@ private:
 	// Distance between each row in the card inventory 
 	UPROPERTY(EditAnywhere, Category = "Inventory Attributes")
 	float cardInventoryRowDistance = 10.0f;
+
+	// Boolean for menu is toggled
+	bool bIsMenuToggled = false;
+
+	// Boolean for HUD is toggled
+	bool bIsHUDToggled = true;
 };
