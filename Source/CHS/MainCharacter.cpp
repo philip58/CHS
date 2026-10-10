@@ -897,10 +897,11 @@ void AMainCharacter::ToggleCardInventory()
 			cardsInInventory[i]->PlaceCardInTableSlot(tempActorCast);
 			if (i == 0 || i % cardGameTable->maxCardsPerInventoryRow == 0)
 			{
+				tempForwardOffset = forwardInventoryOffset;
 				tempHorizontalOffset = horizontalInventoryOffset;
 				if (i % cardGameTable->maxCardsPerInventoryRow == 0)
 				{
-					tempVerticalOffset += cardInventoryRowDistance;
+					tempVerticalOffset -= cardInventoryRowDistance;
 				}
 
 				cardsInInventory[i]->SetActorLocation(
