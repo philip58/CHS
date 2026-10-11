@@ -388,77 +388,6 @@ void AMainCharacter::UnequipCard(ACardActor* cardActor)
 }
 
 // Interact with the hit card actor
-//void AMainCharacter::InteractWithCard(AActor* interactedActor)
-//{
-//	// Get card from actor
-//	ACardActor* card;
-//	card = Cast<ACardActor>(interactedActor);
-//
-//	// Return if we do not have a hit card
-//	if (!card)
-//	{
-//		return;
-//	}
-//
-//	// Return if the card hit is the equipped card
-//	if (card == equippedCard)
-//	{
-//		return;
-//	}
-//
-//	// If we already have an equipped card, unequip it
-//	if (equippedCard)
-//	{
-//		UnequipCard(equippedCard);
-//	}
-//
-//	// If inventory is empty, change inventory image to card img
-//	if (cardsInInventory.Num() == 0)
-//	{
-//		if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
-//		{
-//			playerHUD->SetHUDImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
-//			playerHUD->SetInventorySlotColor
-//			(
-//				inventorySlotArray[inventoryPos],
-//				rSelectedColorInventorySlot,
-//				gSelectedColorInventorySlot,
-//				bSelectedColorInventorySlot,
-//				aSelectedColorInventorySlot
-//			);
-//		}
-//	}
-//
-//	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
-//	EquipCard(card);
-//
-//	// If inventory is expanded
-//	if (bIsInventoryExpanded)
-//	{
-//		for (int32 i = 0; i < cardsInInventory.Num(); ++i)
-//		{
-//			if (cardsInInventory[i] == card)
-//			{
-//				cardsInInventory.Swap(i, cardsInInventory.Num() - 1);
-//				equippedCardPos = cardsInInventory.Num() - 1;
-//				break;
-//			}
-//		}
-//		
-//		ToggleCardInventory();
-//		return;
-//	}
-//	
-//	card->SetOwningCharacter(this);
-//	if (!bIsCardVisible)
-//	{
-//		UnequipCard(equippedCard);
-//		equippedCard = nullptr;
-//	}
-//	cardsInInventory.Push(card);
-//	++equippedCardPos;
-//}
-
 void AMainCharacter::InteractWithCard(AActor* interactedActor)
 {
 	// Get card from actor
@@ -538,23 +467,6 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
 
-	// If inventory is expanded
-	if (bIsInventoryExpanded)
-	{
-		for (int32 i = 0; i < cardsInInventory.Num(); ++i)
-		{
-			if (cardsInInventory[i] == card)
-			{
-				cardsInInventory.Swap(i, cardsInInventory.Num() - 1);
-				equippedCardPos = cardsInInventory.Num() - 1;
-				break;
-			}
-		}
-
-		ToggleCardInventory();
-		return;
-	}
-
 	card->SetOwningCharacter(this);
 	if (!bIsCardVisible)
 	{
@@ -562,7 +474,8 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		equippedCard = nullptr;
 	}
 	cardsInInventory.Push(card);
-	++equippedCardPos;
+	//++equippedCardPos;
+	equippedCardPos = cardsInInventory.Num() - 1;
 }
 
 // Interact with hit chair actor 
