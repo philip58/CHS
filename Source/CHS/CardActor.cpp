@@ -161,3 +161,14 @@ ECardValue ACardActor::GetCardValue() const
 	return cardValue;
 }
 
+// Get owning character
+AMainCharacter* ACardActor::GetOwningCharacter() const
+{
+	return owningCharacter;
+}
+
+// Set owning character
+void ACardActor::SetOwningCharacter(AMainCharacter* character) 
+{
+	owningCharacter = character;
+}

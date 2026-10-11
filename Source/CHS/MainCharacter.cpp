@@ -99,7 +99,7 @@ void AMainCharacter::Tick(float deltaTime)
 	Super::Tick(deltaTime);
 
 	// Check if hovering over an actor or not
-	if ( !bIsInventoryExpanded && IsValid( actorInView = GetLineTraceHitActor() ) )
+	if ( IsValid( actorInView = GetLineTraceHitActor() ) )
 	{
 		// If hovering over something, call the hovering method  
 		HandleHovering(actorInView);
@@ -255,9 +255,6 @@ void AMainCharacter::StopSprinting()
 // Handle player interaction (E key) 
 void AMainCharacter::Interact()
 {
-	// Return if card inventory expanded
-	if (bIsInventoryExpanded) return;
-
 	// Game mode base is necessary for getting the stored player/world variables
 	if (!gameModeBase)
 	{
@@ -275,6 +272,10 @@ void AMainCharacter::Interact()
 	{
 		InteractWithCard(hitActor);
 	}
+
+	// Return if card inventory expanded
+	if (bIsInventoryExpanded) return;
+
 	// If card is equipped and the hit actor is a table card slot, place the card
 	else if (equippedCard != nullptr && hitActor->IsA(ACardTableSlot::StaticClass()))
 	{
@@ -318,6 +319,7 @@ void AMainCharacter::Throw()
 	// Throw the currently equipped card
 	equippedCard->SetIsCardEquipped(false);
 	equippedCard->UnequipCard();
+	equippedCard->SetOwningCharacter(nullptr);
 	boxComp->SetSimulatePhysics(true);
 	boxComp->AddImpulse(
 		(
@@ -425,11 +427,29 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 				aSelectedColorInventorySlot
 			);
 		}
-
 	}
 
 	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
+
+	// If inventory is expanded
+	if (bIsInventoryExpanded)
+	{
+		for (int32 i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			if (cardsInInventory[i] == card)
+			{
+				cardsInInventory.Swap(i, cardsInInventory.Num() - 1);
+				equippedCardPos = cardsInInventory.Num() - 1;
+				break;
+			}
+		}
+		
+		ToggleCardInventory();
+		return;
+	}
+	
+	card->SetOwningCharacter(this);
 	if (!bIsCardVisible)
 	{
 		UnequipCard(equippedCard);
@@ -559,12 +579,26 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	{
 		ACardActor* tempCardActor = Cast<ACardActor>(hoveredActor);
 		if (!tempCardActor) return;
-		if (tempCardActor && !tempCardActor->GetIsCardEquipped())
+		if (!tempCardActor->GetIsCardEquipped())
 		{
 			playerHUD->SetInteractPopupText("Press E To Pick Up");
 		}
+		
+		if (bIsInventoryExpanded && tempCardActor->GetOwningCharacter() == this)
+		{
+			playerHUD->SetInteractPopupText("Press E to Equip");
+		}
+
 		return;
 	}
+
+	// Return if inventory is expanded, we only want to be able to hover on cards
+	if (bIsInventoryExpanded)
+	{
+		playerHUD->SetInteractPopupText("");
+		return;
+	}
+
 
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
@@ -898,13 +932,18 @@ void AMainCharacter::ToggleCardInventory()
 		FRotator newCardRotation = FRotator::ZeroRotator;
 
 		bStopCharacterMovement = true;
+		ACardActor* tempCardActor = equippedCard;
 		ToggleCardHide(true);
+		equippedCard = tempCardActor;
 
 		// Alternate between setting location left/right of origin
 		for (int i = 0; i < cardsInInventory.Num(); ++i)
 		{
 			if (!cardsInInventory[i]) continue;
 			cardsInInventory[i]->PlaceCardInTableSlot(tempActorCast);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			cardsInInventory[i]->cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 			if (i == 0 || i % cardGameTable->maxCardsPerInventoryRow == 0)
 			{
 				tempForwardOffset = forwardInventoryOffset;
@@ -948,8 +987,6 @@ void AMainCharacter::ToggleCardInventory()
 			tempForwardOffset += forwardInventoryOffset;
 		}
 
-		// Show the mouse cursor
-		//ShowMouseCursor();
 	}
 	// If bool is false, put all the cards away and equip the current card in inventory and resume character movement
 	else
@@ -957,7 +994,13 @@ void AMainCharacter::ToggleCardInventory()
 		bStopCharacterMovement = false;
 		for (int i = 0; i < cardsInInventory.Num(); ++i)
 		{
+			if(!cardsInInventory[i]) continue;
 			UnequipCard(cardsInInventory[i]);
+			ECollisionResponse response1 = cardsInInventory[i]->cardMesh->GetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility);
+			ECollisionResponse response2 = cardsInInventory[i]->cardBoxCollision->GetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+			cardsInInventory[i]->cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		}
 
 		EquipCard(cardsInInventory[equippedCardPos]);

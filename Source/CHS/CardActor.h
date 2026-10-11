@@ -66,6 +66,12 @@ public:
 
 	// Get the card value
 	ECardValue GetCardValue() const;
+
+	// Get owning character
+	AMainCharacter* GetOwningCharacter() const;
+
+	// Set owning character
+	void SetOwningCharacter(AMainCharacter* character);
 private:
 	/* --- Methods --- */
 	// Overlap collision method
