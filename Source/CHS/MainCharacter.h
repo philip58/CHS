@@ -172,6 +172,9 @@ private:
 	// Toggle HUD Hide
 	void HideHUD();
 
+	// Interact with card table slot
+	void InteractWithCardTableSlot(AActor* interactedActor);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")

@@ -7,6 +7,8 @@
 #include "Components/BoxComponent.h"
 #include "CardTableSlot.generated.h"
 
+class ACardActor;
+
 UCLASS()
 class CHS_API ACardTableSlot : public AActor
 {
@@ -33,5 +35,8 @@ public:
 	// Collision scale
 	UPROPERTY(EditAnywhere)
 	float collisionScale = .5f;
+
+	// Array of cards in the slot
+	TArray<TObjectPtr<ACardActor>> cardsInSlotArray;
 
 };

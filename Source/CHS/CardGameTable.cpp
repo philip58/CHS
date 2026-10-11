@@ -63,6 +63,7 @@ void ACardGameTable::BeginPlay()
 		SpawnGameStartButton();
 		SpawnPlayerChairs();
 		SpawnTimerText();
+		SpawnCardTableSlot();
 	}
 
 }
@@ -220,6 +221,19 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		}
 	}
 
+	// Spawn a random card and place it in the card table slot
+	mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
+	if (mesh && cardTableSlot)
+	{
+		card = mainGameModeBase->SpawnCardActor(mesh, cardTableSlot->GetActorLocation());
+		if (card)
+		{
+			card->SetHasBeenPlayed(true);
+			card->PlaceCardInTableSlot(cardTableSlot);
+		}
+	}
+
+	// Find first player ID and start their turn
 	int startingPlayerID = FMath::Floor(FMath::RandRange(1,numberOfChairs));
 	playerTurnID = startingPlayerID;
 
@@ -311,4 +325,44 @@ void ACardGameTable::SpawnTimerText()
 	timerTextActor->SetActorRelativeRotation(FRotator(0, -180, 0));
 	if (timerTextActor) timerTextComponent = timerTextActor->GetTextRender();
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Press The Start Game Button To Start"));
+}
+
+// Spawn the card table slot for playing a move
+void ACardGameTable::SpawnCardTableSlot()
+{
+	// Setting properties for cardSlot actor spawning
+	FTransform cardSlotNewTransform = FTransform::Identity;
+	FActorSpawnParameters cardSlotSpawnParams;
+	cardSlotSpawnParams.Owner = this;
+	cardSlotNewTransform.SetLocation(currTableLocation
+		+
+		FVector(
+			(-tableSize.X / cardSlotXSpawnMultiplier) + cardSlotXSpawnPadding,
+			(-tableSize.Y / cardSlotYSpawnMultiplier) + cardSlotYSpawnPadding,
+			(tableSize.Z / cardSlotZSpawnMultiplier) + cardSlotZSpawnPadding)
+	);
+
+	// Spawn the card table slot
+	cardTableSlot = mainGameModeBase->playerWorld->SpawnActor<ACardTableSlot>(cardTableSlotClass, cardSlotNewTransform, cardSlotSpawnParams);
+	if (cardTableSlot) cardTableSlot->SetActorRotation(FRotator(90.0f, 180.0f, 0));
+}
+
+// Check if the selected card can be played, returns true if it can and false if not
+bool ACardGameTable::CanCardBePlayed(ACardActor* playedCard)
+{
+	// Return if no card or card slot
+	if (!playedCard || !cardTableSlot) return false;
+
+	// Set latest played card in the slot
+	ACardActor* lastPlayedCard = cardTableSlot->cardsInSlotArray[cardTableSlot->cardsInSlotArray.Num() - 1];
+	if (!lastPlayedCard) return false;
+
+	if (playedCard->GetCardValue() == lastPlayedCard->GetCardValue() || playedCard->GetCardType() == lastPlayedCard->GetCardType() || playedCard->GetCardType() == ECardType::CT_Wild)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

@@ -13,6 +13,7 @@ class AMainGameModeBase;
 class APlayerChairSlot;
 class ATextRenderActor;
 class UTextRenderComponent;
+class ACardActor;
 
 UCLASS()
 class CHS_API ACardGameTable : public AActor
@@ -28,12 +29,17 @@ protected:
 	virtual void BeginPlay() override;
 
 public:	
+	/* --- Methods --- */
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	// Main card game loop logic
 	void StartMainGameLoop(AGameStartButton* currGameStartButton);
 
+	// Check if the selected card can be played, returns true if it can and false if not
+	bool CanCardBePlayed(ACardActor* playedCard);
+
+	/* --- Variables --- */
 	// Boolean for game is still running or not
 	bool bIsGameRunning = false;
 
@@ -64,6 +70,8 @@ private:
 	// Set the timer for the players turn
 	void SetPlayerTurnTimer();
 
+	// Spawn the card table slot for playing a move
+	void SpawnCardTableSlot();
 
 	/* --- Variables --- */
 	// Place holder root component
@@ -97,7 +105,10 @@ private:
 	int numberOfChairs = 4;
 
 	// Array for Card table slot actors on the table 
-	TArray<TObjectPtr<ACardTableSlot>> cardTableSlot;
+	TArray<TObjectPtr<ACardTableSlot>> cardTableSlotArray;
+
+	// Card table slot for playing cards
+	TObjectPtr<ACardTableSlot> cardTableSlot;
 
 	// Pointer for main gamemode base
 	TObjectPtr<AMainGameModeBase> mainGameModeBase;
@@ -233,4 +244,28 @@ private:
 
 	// Current player turn ID 
 	int playerTurnID = 1;
+
+	// cardSlot x location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotXSpawnMultiplier = 1000;
+
+	// cardSlot y location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotYSpawnMultiplier = 1000;
+
+	// cardSlot z location multiplier 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotZSpawnMultiplier = 2;
+
+	// cardSlot x location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotXSpawnPadding = 0;
+
+	// cardSlot y location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotYSpawnPadding = 0;
+
+	// cardSlot z location padding 
+	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
+	float cardSlotZSpawnPadding = 5;
 };

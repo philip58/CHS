@@ -72,6 +72,15 @@ public:
 
 	// Set owning character
 	void SetOwningCharacter(AMainCharacter* character);
+
+	// Get has card been played boolean
+	bool GetHasBeenPlayed() const;
+
+	// Set has card been played boolean
+	void SetHasBeenPlayed(const bool& hasBeenPlayed);
+
+
+
 private:
 	/* --- Methods --- */
 	// Overlap collision method
@@ -98,4 +107,11 @@ private:
 	// Vertical offset above the table card slot 
 	UPROPERTY(EditAnywhere)
 	float tableSlotVertOffset = 30.0f;
+
+	// Boolean for if the card has been played yet
+	bool bHasBeenPlayed = false;
+
+	// Float distance between each card in the slot
+	UPROPERTY(EditAnywhere)
+	float distanceBetweenSlotCard = 0.04;
 };

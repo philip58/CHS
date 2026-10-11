@@ -279,11 +279,7 @@ void AMainCharacter::Interact()
 	// If card is equipped and the hit actor is a table card slot, place the card
 	else if (equippedCard != nullptr && hitActor->IsA(ACardTableSlot::StaticClass()))
 	{
-		//ACardActor* tempCard = equippedCard;
-		//UnequipAndRemoveCard();
-		//tempCard->SetIsCardEquipped(false);
-		//tempCard->UnequipCard();
-		//tempCard->PlaceCardInTableSlot(hitActor);
+		InteractWithCardTableSlot(hitActor);
 	}
 	
 	// If the hit actor is a chair, call the chair interaction method
@@ -396,6 +392,12 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 
 	// Return if we do not have a hit card
 	if (!card)
+	{
+		return;
+	}
+
+	// Return if card has been played already
+	if (card->GetHasBeenPlayed())
 	{
 		return;
 	}
@@ -597,7 +599,15 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
 		ACardActor* tempCardActor = Cast<ACardActor>(hoveredActor);
+
+		// Return if no card or if card has been played already
 		if (!tempCardActor) return;
+		if (tempCardActor->GetHasBeenPlayed())
+		{
+			playerHUD->SetInteractPopupText("");;
+			return;
+		}
+			
 		if (!tempCardActor->GetIsCardEquipped())
 		{
 			playerHUD->SetInteractPopupText("Press E To Pick Up");
@@ -629,8 +639,8 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If player is holding a card and the hit actor is a card slot
 	if (equippedCard && hoveredActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		//playerHUD->SetInteractPopupText("Press E To Place");
-		//return; 
+		playerHUD->SetInteractPopupText("Press E To Place");
+		return; 
 	}
 
 	// If player is hovering over the game start button change the pop up text
@@ -1155,4 +1165,37 @@ void AMainCharacter::HideHUD()
 		if (playerHUD->interactPopupText) playerHUD->SetInteractPopupText("");
 		bIsHUDToggled = false;
 	}
+}
+
+// Interact with card table slot, place the equipped card into the slot to play it
+void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
+{
+	// Return if no card is equipped or no slot was hit
+	if (!equippedCard || !interactedActor || !cardGameTable)
+	{
+		return;
+	}
+
+	ACardActor* tempCard = equippedCard;
+	if (!tempCard) return;
+
+	if (cardGameTable->CanCardBePlayed(tempCard)) // If successfuly able to be placed aka matches the rules
+	{
+		// Remove the card from the inventory
+		UnequipAndRemoveCard();
+
+		// Remove the card from the player
+		tempCard->SetIsCardEquipped(false);
+		tempCard->SetOwningCharacter(nullptr);
+		tempCard->UnequipCard();
+
+		// Place the card in the table slot, cannot be picked up again
+		tempCard->SetHasBeenPlayed(true);
+		tempCard->PlaceCardInTableSlot(interactedActor);
+	}
+	else // If unable to place and does not follow the rules, tell the plyaer or just return
+	{
+
+	}
+	
 }

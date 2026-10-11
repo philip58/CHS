@@ -122,10 +122,32 @@ void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 
 void ACardActor::PlaceCardInTableSlot(AActor* actor)
 {
-	this->SetActorRelativeRotation(actor->GetActorRotation() + FRotator(180, 0, 0));
-	this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset));
+	// Return if no actor
+	if (!actor) return;
+
+	// Detach card and set its transform to the card slot
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	this->SetActorRotation(actor->GetActorRotation() + FRotator(180, 0, 0));
+
+	if (bHasBeenPlayed)
+	{
+		ACardTableSlot* tempCardSlot = Cast<ACardTableSlot>(actor);
+		if (!tempCardSlot) return;
+
+		// Add the card to the card slot's array of cards and setup to adjust its position accordingly
+		tempCardSlot->cardsInSlotArray.Push(this);
+		this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset + (distanceBetweenSlotCard * tempCardSlot->cardsInSlotArray.Num())));
+	}
+	else
+	{
+		this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset));
+	}
+
+	// Disable collision and physics, do not let it get picked up
 	cardBoxCollision->SetSimulatePhysics(false);
 	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 }
 
 // Set cards new mesh
@@ -171,4 +193,16 @@ AMainCharacter* ACardActor::GetOwningCharacter() const
 void ACardActor::SetOwningCharacter(AMainCharacter* character) 
 {
 	owningCharacter = character;
+}
+
+// Get has card been played boolean
+bool ACardActor::GetHasBeenPlayed() const
+{
+	return bHasBeenPlayed;
+}
+
+// Set has card been played boolean
+void ACardActor::SetHasBeenPlayed(const bool& hasBeenPlayed)
+{
+	bHasBeenPlayed = hasBeenPlayed;
 }
