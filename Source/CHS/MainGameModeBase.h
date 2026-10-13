@@ -42,11 +42,14 @@ public:
 	// Spawn card and add it to deck
 	void SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr<ACardActor>>& deck, const ECardType& cardType, const ECardValue& cardValue);
 
-	// Spawn a card at given location and return the card
+	// Spawn a card at given location and return the card, original with mesh
 	ACardActor* SpawnCardActor(UStaticMesh* cardMesh, const FVector& location);
 
+	// Spawn a card at given location and return the card, overload with cardactor
+	ACardActor* SpawnCardActor(ACardActor* originalCard, const FVector& location);
+
 	// Get random card mesh from card array
-	UStaticMesh* GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray);
+	ACardActor* GetRandomCard(const TArray<TObjectPtr<ACardActor>>& deckArray, float randNum);
 
 	/* --- Variables --- */
 	// Globally accessible character movement component

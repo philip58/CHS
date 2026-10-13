@@ -199,37 +199,51 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		
 	}
 	if (mainGameModeBase->mainCharacterArray.Num() <= 0) return;
+	if (mainGameModeBase->specialDeck.Num() <= 0) return;
 
 	bIsGameRunning = true;
 	currGameStartButton->SetGameHasStarted(true);
 	cardGameState = ECardGameState::GS_Start;
 
 	// Spawn a card for each player
-	UStaticMesh* mesh;
-	ACardActor* card;
+	ACardActor* origCard = nullptr;
+	ACardActor* newCard;
 	AMainCharacter* tempMainCharacter;
 
 	for (int i = 0; i < mainGameModeBase->mainCharacterArray.Num(); ++i)
 	{
 		for (int j = 0; j < cardsDealtFirst; ++j)
 		{
-			mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
-			if (!mesh) continue;
-			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			// Get random number between 0 to deck size 
+			float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+			FMath::FloorToInt(randNum);
+			origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+			if (!origCard) continue;
+			newCard = mainGameModeBase->SpawnCardActor(origCard, FVector(0, 0, 0));
 			tempMainCharacter = mainGameModeBase->mainCharacterArray[i];
-			tempMainCharacter->InteractWithCard(card);
+			tempMainCharacter->InteractWithCard(newCard);
 		}
 	}
 
-	// Spawn a random card and place it in the card table slot
-	mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
-	if (mesh && cardTableSlot)
+	// Keep getting a random card until not wild
+	bool isCardWild = true;
+	while (isCardWild)
 	{
-		card = mainGameModeBase->SpawnCardActor(mesh, cardTableSlot->GetActorLocation());
-		if (card)
+		// Get random number between 0 to deck size and if not wild, break loop
+		float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+		FMath::FloorToInt(randNum);
+		origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+		origCard->GetCardType() == ECardType::CT_Wild ? isCardWild = true : isCardWild = false;
+	}
+
+	// Spawn a random card and place it in the card table slot
+	if (origCard && cardTableSlot)
+	{
+		newCard = mainGameModeBase->SpawnCardActor(origCard, cardTableSlot->GetActorLocation());
+		if (newCard)
 		{
-			card->SetHasBeenPlayed(true);
-			card->PlaceCardInTableSlot(cardTableSlot);
+			newCard->SetHasBeenPlayed(true);
+			newCard->PlaceCardInTableSlot(cardTableSlot);
 		}
 	}
 
@@ -258,18 +272,21 @@ void ACardGameTable::SetPlayerTurnTimer()
 	// If there was a previous turn that ran out of time, make that player draw a card
 	if (cardGameState == ECardGameState::GS_Done)
 	{
-		UStaticMesh* mesh;
-		ACardActor* card;
+		ACardActor* origCard;
+		ACardActor* newCard;
 		AMainCharacter* tempMainCharacter;
-		mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
-		if (mesh)
+		// Get random number between 0 to deck size 
+		float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+		FMath::FloorToInt(randNum);
+		origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+		if (origCard)
 		{
-			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			newCard = mainGameModeBase->SpawnCardActor(origCard, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 			
 			if (tempMainCharacter)
 			{
-				tempMainCharacter->InteractWithCard(card);
+				tempMainCharacter->InteractWithCard(newCard);
 
 				// Toggle inventory twice to update the new card in the inventory
 				tempMainCharacter->ToggleCardInventory();

@@ -22,7 +22,7 @@ ACardActor::ACardActor()
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	//cardBoxCollision->SetupAttachment(RootComponent);
-	cardBoxCollision->SetRelativeScale3D( FVector(0.05,1.5625,2.2125) );
+	cardBoxCollision->SetWorldScale3D( FVector(cardSpawnScaleX, cardSpawnScaleY, cardSpawnScaleZ) );
 
 	this->SetRootComponent(cardBoxCollision);
 	cardMesh->SetupAttachment(RootComponent);
@@ -115,7 +115,7 @@ void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	AActor* compActor = OtherComp->GetOwner();
 	if (compActor && compActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		PlaceCardInTableSlot(compActor);
+		//PlaceCardInTableSlot(compActor);
 	}
 
 }

@@ -1170,14 +1170,17 @@ void AMainCharacter::HideHUD()
 // Interact with card table slot, place the equipped card into the slot to play it
 void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 {
-	// Return if no card is equipped or no slot was hit
+	// Return if no equipped card is equipped or no slot was hit
 	if (!equippedCard || !interactedActor || !cardGameTable)
 	{
 		return;
 	}
 
+	// Return if no card or card slot
 	ACardActor* tempCard = equippedCard;
 	if (!tempCard) return;
+	ACardTableSlot* tempCardSlot = Cast<ACardTableSlot>(interactedActor);
+	if (!tempCardSlot) return;
 
 	if (cardGameTable->CanCardBePlayed(tempCard)) // If successfuly able to be placed aka matches the rules
 	{
@@ -1193,9 +1196,9 @@ void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 		tempCard->SetHasBeenPlayed(true);
 		tempCard->PlaceCardInTableSlot(interactedActor);
 	}
-	else // If unable to place and does not follow the rules, tell the plyaer or just return
+	else // If unable to place and does not follow the rules, tell the player or just return
 	{
-
+		return;
 	}
 	
 }

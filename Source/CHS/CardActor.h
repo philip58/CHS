@@ -102,6 +102,7 @@ private:
 	ECardType cardType;
 
 	// Card value
+	UPROPERTY(EditDefaultsOnly)
 	ECardValue cardValue;
 
 	// Vertical offset above the table card slot 
@@ -114,4 +115,16 @@ private:
 	// Float distance between each card in the slot
 	UPROPERTY(EditAnywhere)
 	float distanceBetweenSlotCard = 0.04;
+
+	// Float for x scale of card on spawn
+	UPROPERTY(EditAnywhere, Category = "Card Mesh Properties")
+	float cardSpawnScaleX = 0.05;
+
+	// Float for y scale of card on spawn
+	UPROPERTY(EditAnywhere, Category = "Card Mesh Properties")
+	float cardSpawnScaleY = 0.25;
+
+	// Float for z scale of card on spawn
+	UPROPERTY(EditAnywhere, Category = "Card Mesh Properties")
+	float cardSpawnScaleZ = 0.35;
 };
