@@ -47,6 +47,9 @@ public:
 	UPROPERTY(EditAnywhere)
 	int maxCardsPerInventoryRow = 7;
 
+	// Game state enum for tracking point in match
+	ECardGameState cardGameState = ECardGameState::GS_Idle;			
+
 private:
 	/* --- Methods --- */
 	// Spawn game start button
@@ -188,9 +191,6 @@ private:
 
 	// Boolean for if first deal of cards to players occured
 	bool bHasFirstDealOccured = false;
-
-	// Game state enum for tracking point in match
-	ECardGameState cardGameState;
 
 	// Game table timer text actor
 	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")

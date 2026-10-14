@@ -104,6 +104,9 @@ public:
 	// Inventory on boolean, if true, inventory was turned on by pressing tab
 	bool bIsInventoryExpanded = false;
 
+	// Boolean if it is the player's turn
+	bool bIsPlayersTurn = false;
+
 private:
 	/* --- Methods--- */
 	//Equip the card

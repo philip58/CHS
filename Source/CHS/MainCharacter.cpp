@@ -639,6 +639,16 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If player is holding a card and the hit actor is a card slot
 	if (equippedCard && hoveredActor->IsA(ACardTableSlot::StaticClass()) )
 	{
+		// Return if no table or if it is not the player's turn
+		if (!cardGameTable) return;
+
+		// Return if not in the wait game state
+		if (cardGameTable->cardGameState != ECardGameState::GS_Wait || !bIsPlayersTurn)
+		{
+			playerHUD->SetInteractPopupText("");
+			return;
+		}
+
 		playerHUD->SetInteractPopupText("Press E To Place");
 		return; 
 	}
@@ -1170,8 +1180,8 @@ void AMainCharacter::HideHUD()
 // Interact with card table slot, place the equipped card into the slot to play it
 void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 {
-	// Return if no equipped card is equipped or no slot was hit
-	if (!equippedCard || !interactedActor || !cardGameTable)
+	// Return if no equipped card is equipped or no slot was hit or no card game table, or it's not the player's turn
+	if (!equippedCard || !interactedActor || !cardGameTable || !bIsPlayersTurn)
 	{
 		return;
 	}

@@ -258,23 +258,27 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 // Handle logic for when timer runs out for player ( go to next player and reset timer )
 void ACardGameTable::TurnTimerFinished()
 {
-	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
+	// Set state, timer, chair text in accordance with the turn finished state
 	cardGameState = ECardGameState::GS_Done;
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
-	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->UnHighlightChairTextColor();
+	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->UnHighlightChairTextColor();
+
+	// Set the last player's turn boolean to false, then call the next turn after the timer runs out for displaying the finish turn text
+	AMainCharacter* tempCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
+	if (tempCharacter) tempCharacter->bIsPlayersTurn = false;
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
 }
 
 // Set player turn wait timer 
 void ACardGameTable::SetPlayerTurnTimer()
 {
+	AMainCharacter* tempMainCharacter = nullptr;
+
 	// If there was a previous turn that ran out of time, make that player draw a card
 	if (cardGameState == ECardGameState::GS_Done)
 	{
 		ACardActor* origCard;
 		ACardActor* newCard;
-		AMainCharacter* tempMainCharacter;
 		// Get random number between 0 to deck size 
 		float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
 		FMath::FloorToInt(randNum);
@@ -306,9 +310,12 @@ void ACardGameTable::SetPlayerTurnTimer()
 		}
 	}
 
-	// Set the timer for the next turn length and highlight current turn player text
-	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->HighlightChairTextColor();
+	// Highlight current turn player text, set the player to be able to play
+	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->HighlightChairTextColor();
+	tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
+	if (tempMainCharacter) tempMainCharacter->bIsPlayersTurn = true;
+
+	// Set the timer for the next turn length, in the meantime the state is in wait for player turn until timer ends 
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, turnTimerLength, false);
 	cardGameState = ECardGameState::GS_Wait;
 }
@@ -367,6 +374,9 @@ void ACardGameTable::SpawnCardTableSlot()
 // Check if the selected card can be played, returns true if it can and false if not
 bool ACardGameTable::CanCardBePlayed(ACardActor* playedCard)
 {
+	// Return false if the game is not in the wait for player turn state
+	if (cardGameState != ECardGameState::GS_Wait) return false;
+
 	// Return if no card or card slot
 	if (!playedCard || !cardTableSlot) return false;
 
