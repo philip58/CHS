@@ -63,6 +63,7 @@ void ACardGameTable::BeginPlay()
 		SpawnGameStartButton();
 		SpawnPlayerChairs();
 		SpawnTimerText();
+		SpawnCardTableSlot();
 	}
 
 }
@@ -178,8 +179,11 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 
 	for (int i = 0; i < mainGameModeBase->mainCharacterActorArray.Num(); ++i)
 	{
+		// Get the player and push them to the array and set their game table to this
 		AMainCharacter* mc = Cast<AMainCharacter>(mainGameModeBase->mainCharacterActorArray[i]);
-		if (mc) mainGameModeBase->mainCharacterArray.Push(mc);
+		if (!mc) continue;
+		mainGameModeBase->mainCharacterArray.Push(mc);
+		mc->SetCardGameTable(this);
 		if (!playerChairMap[i + 1]) continue;
 
 		// For each player that is not the main character, assign them a chair for turn swapping logic
@@ -192,66 +196,107 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		// Set player id text for each chair
 		FString newChairStr = "Player " + FString::FromInt(i + 1);
 		playerChairMap[i + 1]->SetChairText(newChairStr);
+		
 	}
 	if (mainGameModeBase->mainCharacterArray.Num() <= 0) return;
+	if (mainGameModeBase->specialDeck.Num() <= 0) return;
 
 	bIsGameRunning = true;
 	currGameStartButton->SetGameHasStarted(true);
 	cardGameState = ECardGameState::GS_Start;
 
 	// Spawn a card for each player
-	UStaticMesh* mesh;
-	ACardActor* card;
+	ACardActor* origCard = nullptr;
+	ACardActor* newCard;
 	AMainCharacter* tempMainCharacter;
 
 	for (int i = 0; i < mainGameModeBase->mainCharacterArray.Num(); ++i)
 	{
 		for (int j = 0; j < cardsDealtFirst; ++j)
 		{
-			mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
-			if (!mesh) continue;
-			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			// Get random number between 0 to deck size 
+			float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+			FMath::FloorToInt(randNum);
+			origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+			if (!origCard) continue;
+			newCard = mainGameModeBase->SpawnCardActor(origCard, FVector(0, 0, 0));
 			tempMainCharacter = mainGameModeBase->mainCharacterArray[i];
-			tempMainCharacter->InteractWithCard(card);
+			tempMainCharacter->InteractWithCard(newCard);
 		}
 	}
 
+	// Keep getting a random card until not wild
+	bool isCardWild = true;
+	while (isCardWild)
+	{
+		// Get random number between 0 to deck size and if not wild, break loop
+		float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+		FMath::FloorToInt(randNum);
+		origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+		origCard->GetCardType() == ECardType::CT_Wild ? isCardWild = true : isCardWild = false;
+	}
+
+	// Spawn a random card and place it in the card table slot
+	if (origCard && cardTableSlot)
+	{
+		newCard = mainGameModeBase->SpawnCardActor(origCard, cardTableSlot->GetActorLocation());
+		if (newCard)
+		{
+			newCard->SetHasBeenPlayed(true);
+			newCard->PlaceCardInTableSlot(cardTableSlot);
+		}
+	}
+
+	// Find first player ID and start their turn
 	int startingPlayerID = FMath::Floor(FMath::RandRange(1,numberOfChairs));
 	playerTurnID = startingPlayerID;
 
 	SetPlayerTurnTimer();
-
-	/*bIsGameRunning = false;
-	currGameStartButton->SetGameHasStarted(false);*/
 
 }
 
 // Handle logic for when timer runs out for player ( go to next player and reset timer )
 void ACardGameTable::TurnTimerFinished()
 {
-	UE_LOG(LogTemp, Display, TEXT("Timer ran out"));
+	// Set state, timer, chair text in accordance with the turn finished state
 	cardGameState = ECardGameState::GS_Done;
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
-	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->UnHighlightChairText();
+	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->UnHighlightChairTextColor();
+
+	// Set the last player's turn boolean to false, then call the next turn after the timer runs out for displaying the finish turn text
+	AMainCharacter* tempCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
+	if (tempCharacter) tempCharacter->bIsPlayersTurn = false;
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
 }
 
 // Set player turn wait timer 
 void ACardGameTable::SetPlayerTurnTimer()
 {
+	AMainCharacter* tempMainCharacter = nullptr;
+
 	// If there was a previous turn that ran out of time, make that player draw a card
 	if (cardGameState == ECardGameState::GS_Done)
 	{
-		UStaticMesh* mesh;
-		ACardActor* card;
-		AMainCharacter* tempMainCharacter;
-		mesh = mainGameModeBase->GetRandomCardMesh(mainGameModeBase->specialDeck);
-		if (mesh)
+		ACardActor* origCard;
+		ACardActor* newCard;
+		// Get random number between 0 to deck size 
+		float randNum = FMath::RandRange(0, mainGameModeBase->specialDeck.Num() - 1);
+		FMath::FloorToInt(randNum);
+		origCard = mainGameModeBase->GetRandomCard(mainGameModeBase->specialDeck, randNum);
+		if (origCard)
 		{
-			card = mainGameModeBase->SpawnCardActor(mesh, FVector(0, 0, 0));
+			newCard = mainGameModeBase->SpawnCardActor(origCard, FVector(0, 0, 0));
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
-			tempMainCharacter->InteractWithCard(card);
+			
+			if (tempMainCharacter)
+			{
+				tempMainCharacter->InteractWithCard(newCard);
+
+				// Toggle inventory twice to update the new card in the inventory
+				tempMainCharacter->ToggleCardInventory();
+				tempMainCharacter->ToggleCardInventory();
+			}
+			
 		}
 
 		// Increment the turn to the next player
@@ -265,9 +310,12 @@ void ACardGameTable::SetPlayerTurnTimer()
 		}
 	}
 
-	// Set the timer for the next turn length and highlight current turn player text
-	if (!playerChairMap[playerTurnID]) return;
-	playerChairMap[playerTurnID]->HighlightChairText();
+	// Highlight current turn player text, set the player to be able to play
+	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->HighlightChairTextColor();
+	tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
+	if (tempMainCharacter) tempMainCharacter->bIsPlayersTurn = true;
+
+	// Set the timer for the next turn length, in the meantime the state is in wait for player turn until timer ends 
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::TurnTimerFinished, turnTimerLength, false);
 	cardGameState = ECardGameState::GS_Wait;
 }
@@ -301,4 +349,47 @@ void ACardGameTable::SpawnTimerText()
 	timerTextActor->SetActorRelativeRotation(FRotator(0, -180, 0));
 	if (timerTextActor) timerTextComponent = timerTextActor->GetTextRender();
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Press The Start Game Button To Start"));
+}
+
+// Spawn the card table slot for playing a move
+void ACardGameTable::SpawnCardTableSlot()
+{
+	// Setting properties for cardSlot actor spawning
+	FTransform cardSlotNewTransform = FTransform::Identity;
+	FActorSpawnParameters cardSlotSpawnParams;
+	cardSlotSpawnParams.Owner = this;
+	cardSlotNewTransform.SetLocation(currTableLocation
+		+
+		FVector(
+			(-tableSize.X / cardSlotXSpawnMultiplier) + cardSlotXSpawnPadding,
+			(-tableSize.Y / cardSlotYSpawnMultiplier) + cardSlotYSpawnPadding,
+			(tableSize.Z / cardSlotZSpawnMultiplier) + cardSlotZSpawnPadding)
+	);
+
+	// Spawn the card table slot
+	cardTableSlot = mainGameModeBase->playerWorld->SpawnActor<ACardTableSlot>(cardTableSlotClass, cardSlotNewTransform, cardSlotSpawnParams);
+	if (cardTableSlot) cardTableSlot->SetActorRotation(FRotator(90.0f, 180.0f, 0));
+}
+
+// Check if the selected card can be played, returns true if it can and false if not
+bool ACardGameTable::CanCardBePlayed(ACardActor* playedCard)
+{
+	// Return false if the game is not in the wait for player turn state
+	if (cardGameState != ECardGameState::GS_Wait) return false;
+
+	// Return if no card or card slot
+	if (!playedCard || !cardTableSlot) return false;
+
+	// Set latest played card in the slot
+	ACardActor* lastPlayedCard = cardTableSlot->cardsInSlotArray[cardTableSlot->cardsInSlotArray.Num() - 1];
+	if (!lastPlayedCard) return false;
+
+	if (playedCard->GetCardValue() == lastPlayedCard->GetCardValue() || playedCard->GetCardType() == lastPlayedCard->GetCardType() || playedCard->GetCardType() == ECardType::CT_Wild)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

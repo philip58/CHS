@@ -22,7 +22,7 @@ ACardActor::ACardActor()
 	cardBoxCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("Card Box Collision"));
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	//cardBoxCollision->SetupAttachment(RootComponent);
-	cardBoxCollision->SetRelativeScale3D( FVector(0.05,1.5625,2.2125) );
+	cardBoxCollision->SetWorldScale3D( FVector(cardSpawnScaleX, cardSpawnScaleY, cardSpawnScaleZ) );
 
 	this->SetRootComponent(cardBoxCollision);
 	cardMesh->SetupAttachment(RootComponent);
@@ -90,6 +90,12 @@ void ACardActor::SetIsCardEquipped(const bool& isEquipped)
 	bIsCardEquipped = isEquipped;
 }
 
+// Get is card equipped boolean
+bool ACardActor::GetIsCardEquipped() const
+{
+	return bIsCardEquipped;
+}
+
 // Collision overlap method for card placing on table slot
 void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
@@ -109,17 +115,39 @@ void ACardActor::OnBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor
 	AActor* compActor = OtherComp->GetOwner();
 	if (compActor && compActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		PlaceCardInTableSlot(compActor);
+		//PlaceCardInTableSlot(compActor);
 	}
 
 }
 
 void ACardActor::PlaceCardInTableSlot(AActor* actor)
 {
-	this->SetActorRelativeRotation(actor->GetActorRotation() + FRotator(180, 0, 0));
-	this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset));
+	// Return if no actor
+	if (!actor) return;
+
+	// Detach card and set its transform to the card slot
+	DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
+	this->SetActorRotation(actor->GetActorRotation() + FRotator(180, 0, 0));
+
+	if (bHasBeenPlayed)
+	{
+		ACardTableSlot* tempCardSlot = Cast<ACardTableSlot>(actor);
+		if (!tempCardSlot) return;
+
+		// Add the card to the card slot's array of cards and setup to adjust its position accordingly
+		tempCardSlot->cardsInSlotArray.Push(this);
+		this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset + (distanceBetweenSlotCard * tempCardSlot->cardsInSlotArray.Num())));
+	}
+	else
+	{
+		this->SetActorLocation(actor->GetActorLocation() + FVector(0, 0, tableSlotVertOffset));
+	}
+
+	// Disable collision and physics, do not let it get picked up
 	cardBoxCollision->SetSimulatePhysics(false);
 	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 }
 
 // Set cards new mesh
@@ -155,3 +183,26 @@ ECardValue ACardActor::GetCardValue() const
 	return cardValue;
 }
 
+// Get owning character
+AMainCharacter* ACardActor::GetOwningCharacter() const
+{
+	return owningCharacter;
+}
+
+// Set owning character
+void ACardActor::SetOwningCharacter(AMainCharacter* character) 
+{
+	owningCharacter = character;
+}
+
+// Get has card been played boolean
+bool ACardActor::GetHasBeenPlayed() const
+{
+	return bHasBeenPlayed;
+}
+
+// Set has card been played boolean
+void ACardActor::SetHasBeenPlayed(const bool& hasBeenPlayed)
+{
+	bHasBeenPlayed = hasBeenPlayed;
+}

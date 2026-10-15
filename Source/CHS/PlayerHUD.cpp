@@ -4,7 +4,22 @@
 #include "Components/TextBlock.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "Components/Button.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Math/Color.h"
+
+// Constructor
+void UPlayerHUD::NativeConstruct()
+{
+    Super::NativeConstruct();
+
+    if (quitButton)
+    {
+        FScriptDelegate scriptDelegate;
+        scriptDelegate.BindUFunction(this, TEXT("Quit"));
+        quitButton->OnClicked.Add(scriptDelegate);
+    }
+}
 
 // Set interact pop up text to input 
 void UPlayerHUD::SetInteractPopupText(const FString& text)
@@ -16,12 +31,21 @@ void UPlayerHUD::SetInteractPopupText(const FString& text)
 }
 
 // Set given inventory slot image to inputted image
-void UPlayerHUD::SetInventoryImage(UImage* currInventoryImage, UTexture2D* newInventoryImage, const float& opacity)
+void UPlayerHUD::SetHUDImage(UImage* currImage, UTexture2D* newImage, const float& opacity)
 {
-    if (currInventoryImage)
+    if (currImage)
     {
-        currInventoryImage->SetBrushFromTexture(newInventoryImage);
-        currInventoryImage->SetOpacity(opacity);
+        currImage->SetBrushFromTexture(newImage);
+        currImage->SetOpacity(opacity);
+    }
+}
+
+// Set the opacity for the HUD widget
+void UPlayerHUD::SetHUDOpacity(UImage* currImage, const float& opacity)
+{
+    if (currImage)
+    {
+        currImage->SetOpacity(opacity);
     }
 }
 
@@ -36,3 +60,13 @@ void UPlayerHUD::SetInventorySlotColor(UBorder* inventorySlot, float rColor, flo
     
 }
 
+// Quit on quit button click
+void UPlayerHUD::Quit()
+{
+    UKismetSystemLibrary::QuitGame(
+        this,
+        GetOwningPlayer(),
+        EQuitPreference::Quit,
+        false
+    );
+}

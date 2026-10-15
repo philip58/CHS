@@ -12,6 +12,7 @@ class ACardActor;
 class APlayerChairSlot;
 class UPlayerHUD;
 class AGameStartButton;
+class ACardGameTable;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -89,10 +90,22 @@ public:
 	// Player leave chair
 	void LeaveChair();
 
+	// Toggle card inventory with press of tab button
+	void ToggleCardInventory();
+
+	// Set the card game table the player is playing at
+	void SetCardGameTable(ACardGameTable* newCardGameTable);
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
 	UStaticMeshComponent* cardPlaceHolderSocket;
+
+	// Inventory on boolean, if true, inventory was turned on by pressing tab
+	bool bIsInventoryExpanded = false;
+
+	// Boolean if it is the player's turn
+	bool bIsPlayersTurn = false;
 
 private:
 	/* --- Methods--- */
@@ -147,6 +160,24 @@ private:
 	// Add inventory widgets to arrays
 	void PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud);
 
+	// Show the mouse cursor
+	void ShowMouseCursor();
+
+	// Hide the mouse cursor
+	void HideMouseCursor();
+
+	// Toggle menu with escape key 
+	void ToggleMenu();
+
+	// Toggle HUD Show
+	void ShowHUD();
+
+	// Toggle HUD Hide
+	void HideHUD();
+
+	// Interact with card table slot
+	void InteractWithCardTableSlot(AActor* interactedActor);
+
 	/* --- Variables--- */
 	// Player camera (viewport)
 	UPROPERTY(EditAnywhere, Category = "Player Camera Properties")
@@ -168,7 +199,7 @@ private:
 
 	// Player mesh component
 	UPROPERTY(EditDefaultsOnly, Category = "Player Mesh Properties")
-	UStaticMeshComponent* playerMesh;
+	USkeletalMeshComponent* playerMesh;
 
 	// Player sprint speed
 	UPROPERTY(EditDefaultsOnly, Category = "Player Movement Properties")
@@ -202,8 +233,14 @@ private:
 	// Chair that player is sitting in
 	APlayerChairSlot* playerChair;
 
-	// Boolean if player is sitting
+	// Boolean if player is sitting in a chair
 	bool bIsPlayerSitting = false;
+
+	// Boolean if player should stop moving
+	bool bStopCharacterMovement = false;
+
+	// Boolean if player should stop looking
+	bool bStopCharacterLooking = false;
 
 	// Distance to move away from chair after exiting
 	UPROPERTY(EditAnywhere)
@@ -224,43 +261,47 @@ private:
 	bool bIsCardVisible = true;
 
 	// Card image png for inventory
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
 	UTexture2D* cardInventoryImg;
 
 	// Blank image png for clearing inventory img
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Images")
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
 	UTexture2D* blankInventoryImg;
 
+	// Image png for HUD crosshair
+	UPROPERTY(EditDefaultsOnly, Category = "HUD Images")
+	UTexture2D* crossHairImg;
+
 	// Red (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float rDefaultColorInventorySlot = .015f;
 
 	// Green (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float gDefaultColorInventorySlot = .015f;
 
 	// Blue (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float bDefaultColorInventorySlot = .015f;
 
 	// Opacity (RBGA) in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float aDefaultColorInventorySlot = .2f;
 
 	// Red (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float rSelectedColorInventorySlot = 1.0f;
 
 	// Green (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float gSelectedColorInventorySlot = 1.0f;
 
 	// Blue (RBGA) color in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float bSelectedColorInventorySlot = 1.0f;
 
 	// Opacity (RBGA) in the inventory slot background
-	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory HUD Attributes")
 	float aSelectedColorInventorySlot = .6f;
 
 	// Inventory size
@@ -287,4 +328,32 @@ private:
 	// Player controller
 	TObjectPtr<APlayerController> playerController;
 
+	// Horizontal inventory expand offset, aka how left/right the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float horizontalInventoryOffset = 5.0f;
+
+	// Forward inventory expand offset, aka how front/back the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float forwardInventoryOffset = 0.04f;
+
+	// Vertical inventory expand offset, aka how up/down the card will be moved from origin when inventory is on 
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float verticalInventoryOffset = -10.0f;
+
+	// Inventory distance from player on expansion
+	UPROPERTY(EditDefaultsOnly, Category = "Inventory Attributes")
+	float inventoryDistanceFromPlayer = 50.0f;
+
+	// Card game table pointer aka current table player is playing a game at
+	TObjectPtr<ACardGameTable> cardGameTable;
+
+	// Distance between each row in the card inventory 
+	UPROPERTY(EditAnywhere, Category = "Inventory Attributes")
+	float cardInventoryRowDistance = 10.0f;
+
+	// Boolean for menu is toggled
+	bool bIsMenuToggled = false;
+
+	// Boolean for HUD is toggled
+	bool bIsHUDToggled = true;
 };

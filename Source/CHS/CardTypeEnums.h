@@ -55,6 +55,7 @@ enum class ECardGameState : uint8
     GS_Start    UMETA(DisplayName = "Start"),
     GS_Wait    UMETA(DisplayName = "Wait"),
     GS_Stack    UMETA(DisplayName = "Stack"),
-    GS_Done    UMETA(DisplayName = "Done")
+    GS_Done    UMETA(DisplayName = "Done"),
+    GS_Idle    UMETA(DisplayName = "Idle")
 };
 

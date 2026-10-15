@@ -3,11 +3,15 @@
 
 #include "MainCharacter.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/ArrowComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "CardActor.h"
 #include "PlayerChairSlot.h"
 #include "PlayerHUD.h"
 #include "Components/Image.h"
 #include "Components/Border.h"
+#include "Components/TextBlock.h"
+#include "Components/Button.h"
 #include "CardTableSlot.h"
 #include "GameStartButton.h"
 #include "CardGameTable.h"
@@ -30,13 +34,16 @@ AMainCharacter::AMainCharacter()
 	cardPlaceHolderSocket->SetRelativeLocation(FVector(75.0, 0.0, 40.0));
 	cardPlaceHolderSocket->SetRelativeRotation(FRotator(-20.0, 0.0, 0.0));
 
+	// Set playerMesh
+	playerMesh = this->GetMesh();
+
 }
 
 // Called when the game starts or when spawned
 void AMainCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
 	// Get temporary world variable and use it to set the gamemode base to the custom MainGameModeBase
 	TWeakObjectPtr<UWorld> tempWorld = GetWorld();
 	if (tempWorld != nullptr)
@@ -135,14 +142,15 @@ void AMainCharacter::SetupPlayerInputComponent(UInputComponent* playerInputCompo
 	playerInputComponent->BindAction("SelectInventorySlot4", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot4);
 	playerInputComponent->BindAction("SelectInventorySlot5", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot5);
 	playerInputComponent->BindAction("SelectInventorySlot6", EInputEvent::IE_Pressed, this, &AMainCharacter::SelectInventorySlot6);
-	//playerInputComponent->BindAction("ToggleInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleInventory); 
+	playerInputComponent->BindAction("ToggleCardInventory", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleCardInventory); 
+	playerInputComponent->BindAction("Menu", EInputEvent::IE_Pressed, this, &AMainCharacter::ToggleMenu);
 }
 
 // Move the player forward
-void AMainCharacter::WalkForward(float input )
+void AMainCharacter::WalkForward(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -155,7 +163,7 @@ void AMainCharacter::WalkForward(float input )
 void AMainCharacter::WalkBackwards(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -168,7 +176,7 @@ void AMainCharacter::WalkBackwards(float input)
 void AMainCharacter::WalkLeft(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -181,7 +189,7 @@ void AMainCharacter::WalkLeft(float input)
 void AMainCharacter::WalkRight(float input)
 {
 	// If player is seated, disable movement
-	if (bIsPlayerSitting)
+	if (bStopCharacterMovement)
 	{
 		return;
 	}
@@ -193,6 +201,9 @@ void AMainCharacter::WalkRight(float input)
 // Player jump
 void AMainCharacter::PlayerJump()
 {
+	// No jumping when inventory is open
+	if (bIsInventoryExpanded) return;
+
 	// If seated, leave chair instead of jumping
 	if (bIsPlayerSitting)
 	{
@@ -210,19 +221,21 @@ void AMainCharacter::PlayerJump()
 // Player looking left and right
 void AMainCharacter::LookHorizontally(float input)
 {
+	if (bStopCharacterLooking) return;
 	AddControllerYawInput(input);
 }
 
 // Player looking up and down
 void AMainCharacter::LookVertically(float input)
 {
+	if (bStopCharacterLooking) return;
 	AddControllerPitchInput(-input);
 }
 
 // Make the player faster if sprinting
 void AMainCharacter::StartSprinting()
 {
-	//bIsPlayerSprinting = true;
+	if (bStopCharacterMovement) return;
 	if (gameModeBase)
 	{
 		gameModeBase->playerMovementComponent->MaxWalkSpeed = sprintSpeed;
@@ -259,14 +272,14 @@ void AMainCharacter::Interact()
 	{
 		InteractWithCard(hitActor);
 	}
+
+	// Return if card inventory expanded
+	if (bIsInventoryExpanded) return;
+
 	// If card is equipped and the hit actor is a table card slot, place the card
 	else if (equippedCard != nullptr && hitActor->IsA(ACardTableSlot::StaticClass()))
 	{
-		//ACardActor* tempCard = equippedCard;
-		//UnequipAndRemoveCard();
-		//tempCard->SetIsCardEquipped(false);
-		//tempCard->UnequipCard();
-		//tempCard->PlaceCardInTableSlot(hitActor);
+		InteractWithCardTableSlot(hitActor);
 	}
 	
 	// If the hit actor is a chair, call the chair interaction method
@@ -302,6 +315,7 @@ void AMainCharacter::Throw()
 	// Throw the currently equipped card
 	equippedCard->SetIsCardEquipped(false);
 	equippedCard->UnequipCard();
+	equippedCard->SetOwningCharacter(nullptr);
 	boxComp->SetSimulatePhysics(true);
 	boxComp->AddImpulse(
 		(
@@ -317,6 +331,7 @@ void AMainCharacter::Throw()
 // When the player scrolls up, iterate positively through the inventory
 void AMainCharacter::ScrollUp()
 {
+	if (bIsInventoryExpanded) return;
 	IncrementThroughInventory(1);
 	//IncrementThroughCards(1);
 }
@@ -324,6 +339,7 @@ void AMainCharacter::ScrollUp()
 // When the player scrolls up, iterate negatively through the inventory
 void AMainCharacter::ScrollDown()
 {
+	if (bIsInventoryExpanded) return;
 	IncrementThroughInventory(-1);
 	//IncrementThroughCards(-1);
 }
@@ -360,10 +376,11 @@ void AMainCharacter::EquipCard(ACardActor* cardActor)
 // Handle the card unequipping logic and maintain relevant variables, current equipped card, and equipped card position
 void AMainCharacter::UnequipCard(ACardActor* cardActor)
 {
-	equippedCard->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
-	equippedCard->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
-	equippedCard->SetActorRelativeRotation(FRotator::ZeroRotator);
-	equippedCard->SetIsCardEquipped(false);
+	AActor* attachedActor = cardActor->GetAttachParentActor();
+	if(attachedActor) cardActor->DetachFromActor(FDetachmentTransformRules::KeepRelativeTransform);
+	cardActor->SetActorRelativeLocation(FVector(-1000, -1000, -5000));
+	cardActor->SetActorRelativeRotation(FRotator::ZeroRotator);
+	cardActor->SetIsCardEquipped(false);
 }
 
 // Interact with the hit card actor
@@ -379,9 +396,49 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		return;
 	}
 
+	// Return if card has been played already
+	if (card->GetHasBeenPlayed())
+	{
+		return;
+	}
+
 	// Return if the card hit is the equipped card
 	if (card == equippedCard)
 	{
+		return;
+	}
+
+	// If inventory is expanded
+	if (bIsInventoryExpanded)
+	{
+		// Check if the card is already in the inventory
+		for (int32 i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			if (cardsInInventory[i] == card)
+			{
+				// Update equipped card position
+				equippedCardPos = i;
+
+				// Close inventory and equip selected card
+				ToggleCardInventory();
+				return;
+			}
+		}
+
+		// If we already have an equipped card, unequip it
+		if (equippedCard)
+		{
+			UnequipCard(equippedCard);
+			equippedCard = nullptr;
+		}
+
+		// Add the new card to the inventory
+		card->SetOwningCharacter(this);
+		cardsInInventory.Push(card);
+		equippedCardPos = cardsInInventory.Num() - 1;
+
+		// Close inventory and equip the new card
+		ToggleCardInventory();
 		return;
 	}
 
@@ -389,6 +446,7 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	if (equippedCard)
 	{
 		UnequipCard(equippedCard);
+		equippedCard = nullptr;
 	}
 
 	// If inventory is empty, change inventory image to card img
@@ -396,7 +454,7 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 	{
 		if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 		{
-			playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
+			playerHUD->SetHUDImage(inventoryImageArray[inventoryPos], cardInventoryImg, 1.0f);
 			playerHUD->SetInventorySlotColor
 			(
 				inventorySlotArray[inventoryPos],
@@ -406,18 +464,20 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 				aSelectedColorInventorySlot
 			);
 		}
-
 	}
 
 	// Equip the card and append it to the card inventory if inventory is on, otherwise just append
 	EquipCard(card);
+
+	card->SetOwningCharacter(this);
 	if (!bIsCardVisible)
 	{
 		UnequipCard(equippedCard);
 		equippedCard = nullptr;
 	}
 	cardsInInventory.Push(card);
-	++equippedCardPos;
+	//++equippedCardPos;
+	equippedCardPos = cardsInInventory.Num() - 1;
 }
 
 // Interact with hit chair actor 
@@ -438,6 +498,7 @@ void AMainCharacter::InteractWithChair(AActor* interactedActor)
 	{
 		playerChair->SetIsSatIn(true);
 		playerChair->SetCharacterInChair(this);
+		bStopCharacterMovement = true;
 		bIsPlayerSitting = true;
 		if (gameModeBase && gameModeBase->playerMovementComponent)
 		{
@@ -460,6 +521,7 @@ void AMainCharacter::LeaveChair()
 	this->SetActorLocation(this->GetActorLocation() + FVector(0, 0, distanceFromChair) );
 	
 	// Set player left chair variables
+	bStopCharacterMovement = false;
 	bIsPlayerSitting = false;
 	playerChair->SetIsSatIn(false);
 	AActor* chairOwner = playerChair->GetOwner();
@@ -527,8 +589,8 @@ AActor* AMainCharacter::GetLineTraceHitActor()
 // Handle logic when hovering over an actor with line trace
 void AMainCharacter::HandleHovering(AActor* hoveredActor)
 {
-	// Return if no gamemode base and no HUD
-	if (!gameModeBase || !playerHUD)
+	// Return if no gamemode base and no HUD and if HUD is off
+	if (!gameModeBase || !playerHUD || !bIsHUDToggled)
 	{
 		return;
 	}
@@ -536,9 +598,36 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If the actor is a card, call card hover method
 	if (hoveredActor->IsA(ACardActor::StaticClass()))
 	{
-		playerHUD->SetInteractPopupText("Press E To Pick Up");
+		ACardActor* tempCardActor = Cast<ACardActor>(hoveredActor);
+
+		// Return if no card or if card has been played already
+		if (!tempCardActor) return;
+		if (tempCardActor->GetHasBeenPlayed())
+		{
+			playerHUD->SetInteractPopupText("");;
+			return;
+		}
+			
+		if (!tempCardActor->GetIsCardEquipped())
+		{
+			playerHUD->SetInteractPopupText("Press E To Pick Up");
+		}
+		
+		if (bIsInventoryExpanded && tempCardActor->GetOwningCharacter() == this)
+		{
+			playerHUD->SetInteractPopupText("Press E to Equip");
+		}
+
 		return;
 	}
+
+	// Return if inventory is expanded, we only want to be able to hover on cards
+	if (bIsInventoryExpanded)
+	{
+		playerHUD->SetInteractPopupText("");
+		return;
+	}
+
 
 	// If the hit actor is a chair, call the chair hover method
 	if (hoveredActor->IsA(APlayerChairSlot::StaticClass()))
@@ -550,8 +639,18 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 	// If player is holding a card and the hit actor is a card slot
 	if (equippedCard && hoveredActor->IsA(ACardTableSlot::StaticClass()) )
 	{
-		//playerHUD->SetInteractPopupText("Press E To Place");
-		//return; 
+		// Return if no table or if it is not the player's turn
+		if (!cardGameTable) return;
+
+		// Return if not in the wait game state
+		if (cardGameTable->cardGameState != ECardGameState::GS_Wait || !bIsPlayersTurn)
+		{
+			playerHUD->SetInteractPopupText("");
+			return;
+		}
+
+		playerHUD->SetInteractPopupText("Press E To Place");
+		return; 
 	}
 
 	// If player is hovering over the game start button change the pop up text
@@ -592,7 +691,7 @@ void AMainCharacter::IncrementThroughCards(const int& increment)
 	}
 
 	// Depending on if decrementing or incrementing, determine next card inventory position
-	int tempPos;
+	int tempPos = 0;
 	if (increment > 0)
 	{
 		// Increment
@@ -638,7 +737,7 @@ void AMainCharacter::IncrementThroughInventory(const int& increment)
 	}
 
 	// Depending on if decrementing or incrementing, determine next inventory position
-	int tempPos;
+	int tempPos = 0;
 	if (increment > 0)
 	{
 		// Increment
@@ -783,7 +882,7 @@ void AMainCharacter::UnequipAndRemoveCard()
 	// If inventory is empty, remove card image from inventory ui
 	if (gameModeBase && playerHUD && inventoryImageArray[inventoryPos] && inventorySlotArray[inventoryPos])
 	{
-		playerHUD->SetInventoryImage(inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
+		playerHUD->SetHUDImage(inventoryImageArray[inventoryPos], blankInventoryImg, 0.0);
 		playerHUD->SetInventorySlotColor
 		(
 			inventorySlotArray[inventoryPos],
@@ -833,4 +932,283 @@ void AMainCharacter::PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud)
 	inventorySlotArray.Push(hud->inventorySlot4);
 	inventorySlotArray.Push(hud->inventorySlot5);
 	inventorySlotArray.Push(hud->inventorySlot6);
+}
+
+// Toggle the card inventory on press of tab key, expands all cards for player
+void AMainCharacter::ToggleCardInventory()
+{
+	if (bIsInventoryExpanded)
+	{
+		bIsInventoryExpanded = false;
+	} 
+	else
+	{
+		bIsInventoryExpanded = true;
+	}
+
+	// Return if card inventory empty
+	if (cardsInInventory.Num() <= 0)
+	{
+		return;
+	}
+
+	// If bool is true, then we expand the inventory to show all the cards and stop player movement
+	if (bIsInventoryExpanded)
+	{
+		// Helper variables 
+		float tempHorizontalOffset = horizontalInventoryOffset;
+		float tempForwardOffset = forwardInventoryOffset;
+		float tempVerticalOffset = verticalInventoryOffset;
+		if (!cardPlaceHolderSocket) return;
+		if (!playerCamera) return;
+		if (!cardGameTable) return;
+		FVector tempCamLocation = playerCamera->GetComponentLocation();
+		FVector tempCamForwardVector = playerCamera->GetForwardVector();
+		FVector tempCamRightVector = playerCamera->GetRightVector();
+		FVector tempCamUpVector = playerCamera->GetUpVector();
+		AActor* tempActorCast = Cast<AActor>(this);
+		FRotator tempCardRotation = FRotator::ZeroRotator;
+		FRotator newCardRotation = FRotator::ZeroRotator;
+
+		bStopCharacterMovement = true;
+		ACardActor* tempCardActor = equippedCard;
+		ToggleCardHide(true);
+		equippedCard = tempCardActor;
+
+		// Alternate between setting location left/right of origin
+		for (int i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			if (!cardsInInventory[i]) continue;
+			cardsInInventory[i]->PlaceCardInTableSlot(tempActorCast);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			cardsInInventory[i]->cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			if (i == 0 || i % cardGameTable->maxCardsPerInventoryRow == 0)
+			{
+				tempForwardOffset = forwardInventoryOffset;
+				tempHorizontalOffset = horizontalInventoryOffset;
+				if (i % cardGameTable->maxCardsPerInventoryRow == 0)
+				{
+					tempVerticalOffset -= cardInventoryRowDistance;
+				}
+
+				cardsInInventory[i]->SetActorLocation(
+					tempCamLocation +
+					(tempCamForwardVector * inventoryDistanceFromPlayer) +
+					(tempCamUpVector * tempVerticalOffset));
+				if (i == 0)
+				{
+					tempCardRotation = cardsInInventory[i]->GetActorRotation();
+					newCardRotation = UKismetMathLibrary::FindLookAtRotation(cardsInInventory[i]->GetActorLocation(), tempCamLocation);
+				}
+			}
+			else if (i % 2 == 0)
+			{
+				cardsInInventory[i]->SetActorLocation(
+					tempCamLocation +
+					(tempCamForwardVector * inventoryDistanceFromPlayer) +
+					(tempCamForwardVector * tempForwardOffset) +
+					(tempCamRightVector * (tempHorizontalOffset - horizontalInventoryOffset)) +
+					(tempCamUpVector * tempVerticalOffset));
+			}
+			else
+			{
+				cardsInInventory[i]->SetActorLocation(
+					tempCamLocation +
+					(tempCamForwardVector * inventoryDistanceFromPlayer) -
+					(tempCamForwardVector * tempForwardOffset) -
+					(tempCamRightVector * tempHorizontalOffset) +
+					(tempCamUpVector * tempVerticalOffset));
+			}
+
+			cardsInInventory[i]->SetActorRotation(FRotator(newCardRotation.Pitch + 180, tempCardRotation.Yaw, tempCardRotation.Roll));
+			tempHorizontalOffset += horizontalInventoryOffset;
+			tempForwardOffset += forwardInventoryOffset;
+		}
+
+	}
+	// If bool is false, put all the cards away and equip the current card in inventory and resume character movement
+	else
+	{
+		bStopCharacterMovement = false;
+		for (int i = 0; i < cardsInInventory.Num(); ++i)
+		{
+			if(!cardsInInventory[i]) continue;
+			UnequipCard(cardsInInventory[i]);
+			ECollisionResponse response1 = cardsInInventory[i]->cardMesh->GetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility);
+			ECollisionResponse response2 = cardsInInventory[i]->cardBoxCollision->GetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+			cardsInInventory[i]->cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+			cardsInInventory[i]->cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		}
+
+		equippedCard = nullptr;
+		EquipCard(cardsInInventory[equippedCardPos]);
+
+		// Hide the mouse cursor
+		//HideMouseCursor();
+	}
+}
+
+// Set the card game table the player is palying at
+void AMainCharacter::SetCardGameTable(ACardGameTable* newCardGameTable)
+{
+	if(newCardGameTable) cardGameTable = newCardGameTable;
+}
+
+// Show the mouse cursor
+void AMainCharacter::ShowMouseCursor()
+{
+	if (!playerController) return;
+
+	playerController->bShowMouseCursor = true;
+
+	FInputModeGameAndUI InputMode;
+	InputMode.SetLockMouseToViewportBehavior(
+		EMouseLockMode::DoNotLock
+	);
+
+	playerController->SetInputMode(InputMode);
+}
+
+// Hide the mouse cursor
+void AMainCharacter::HideMouseCursor()
+{
+	if (!playerController) return;
+
+	playerController->bShowMouseCursor = false;
+
+	FInputModeGameOnly InputMode;
+	playerController->SetInputMode(InputMode);
+}
+
+// Toggle menu with escape 
+void AMainCharacter::ToggleMenu()
+{
+	if (!bIsMenuToggled)
+	{
+		ShowMouseCursor();
+		bStopCharacterMovement = true;
+		bIsMenuToggled = true;
+		bStopCharacterLooking = true;
+		HideHUD();
+	}
+	else
+	{
+		HideMouseCursor();
+		bStopCharacterMovement = false;
+		bIsMenuToggled = false;
+		bStopCharacterLooking = false;
+		ShowHUD();
+	}
+}
+
+// Toggle HUD show
+void AMainCharacter::ShowHUD()
+{
+	// Return if no hud
+	if (!playerHUD) return;
+
+	// Hide/show hud widgets
+	if (!bIsHUDToggled)
+	{
+		// Show the HUD
+		if (playerHUD->crossHair) playerHUD->crossHair->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage1) playerHUD->inventoryImage1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage2) playerHUD->inventoryImage2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage3) playerHUD->inventoryImage3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage4) playerHUD->inventoryImage4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage5) playerHUD->inventoryImage5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventoryImage6) playerHUD->inventoryImage6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot1) playerHUD->inventorySlot1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot2) playerHUD->inventorySlot2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot3) playerHUD->inventorySlot3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot4) playerHUD->inventorySlot4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot5) playerHUD->inventorySlot5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlot6) playerHUD->inventorySlot6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner1) playerHUD->inventorySlotInner1->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner2) playerHUD->inventorySlotInner2->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner3) playerHUD->inventorySlotInner3->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner4) playerHUD->inventorySlotInner4->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner5) playerHUD->inventorySlotInner5->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->inventorySlotInner6) playerHUD->inventorySlotInner6->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->menuBorder) playerHUD->menuBorder->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButtonText) playerHUD->quitButtonText->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetIsEnabled(false);
+		bIsHUDToggled = true;
+	}
+}
+
+// Toggle HUD hide
+void AMainCharacter::HideHUD()
+{
+	// Return if no hud
+	if (!playerHUD) return;
+
+	if (bIsHUDToggled)
+	{
+		// Hide the HUD
+		if(playerHUD->crossHair) playerHUD->crossHair->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage1) playerHUD->inventoryImage1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage2) playerHUD->inventoryImage2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage3) playerHUD->inventoryImage3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage4) playerHUD->inventoryImage4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage5) playerHUD->inventoryImage5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventoryImage6) playerHUD->inventoryImage6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot1) playerHUD->inventorySlot1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot2) playerHUD->inventorySlot2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot3) playerHUD->inventorySlot3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot4) playerHUD->inventorySlot4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot5) playerHUD->inventorySlot5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlot6) playerHUD->inventorySlot6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner1) playerHUD->inventorySlotInner1->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner2) playerHUD->inventorySlotInner2->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner3) playerHUD->inventorySlotInner3->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner4) playerHUD->inventorySlotInner4->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner5) playerHUD->inventorySlotInner5->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->inventorySlotInner6) playerHUD->inventorySlotInner6->SetVisibility(ESlateVisibility::Hidden);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->quitButtonText) playerHUD->quitButtonText->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->menuBorder) playerHUD->menuBorder->SetVisibility(ESlateVisibility::Visible);
+		if (playerHUD->quitButton) playerHUD->quitButton->SetIsEnabled(true);
+		if (playerHUD->interactPopupText) playerHUD->SetInteractPopupText("");
+		bIsHUDToggled = false;
+	}
+}
+
+// Interact with card table slot, place the equipped card into the slot to play it
+void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
+{
+	// Return if no equipped card is equipped or no slot was hit or no card game table, or it's not the player's turn
+	if (!equippedCard || !interactedActor || !cardGameTable || !bIsPlayersTurn)
+	{
+		return;
+	}
+
+	// Return if no card or card slot
+	ACardActor* tempCard = equippedCard;
+	if (!tempCard) return;
+	ACardTableSlot* tempCardSlot = Cast<ACardTableSlot>(interactedActor);
+	if (!tempCardSlot) return;
+
+	if (cardGameTable->CanCardBePlayed(tempCard)) // If successfuly able to be placed aka matches the rules
+	{
+		// Remove the card from the inventory
+		UnequipAndRemoveCard();
+
+		// Remove the card from the player
+		tempCard->SetIsCardEquipped(false);
+		tempCard->SetOwningCharacter(nullptr);
+		tempCard->UnequipCard();
+
+		// Place the card in the table slot, cannot be picked up again
+		tempCard->SetHasBeenPlayed(true);
+		tempCard->PlaceCardInTableSlot(interactedActor);
+	}
+	else // If unable to place and does not follow the rules, tell the player or just return
+	{
+		return;
+	}
+	
 }

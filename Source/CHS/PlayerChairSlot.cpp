@@ -74,16 +74,30 @@ void APlayerChairSlot::SetChairText(const FString& str)
 	textComponent->SetText(FText::FromString(str));
 }
 
-// Highlight chair text when it's the player's turn
-void APlayerChairSlot::HighlightChairText()
+// Highlight chair text material when it's the player's turn
+void APlayerChairSlot::HighlightChairTextMaterial()
 {
 	if (!highlightMaterial || !textComponent) return;
 	textComponent->SetTextMaterial(highlightMaterial);
 }
 
-// Unhighlight chair text when it's not the player's turn
-void APlayerChairSlot::UnHighlightChairText()
+// Unhighlight chair text material when it's not the player's turn
+void APlayerChairSlot::UnHighlightChairTextMaterial()
 {
 	if (!unHighlightMaterial || !textComponent) return;
 	textComponent->SetTextMaterial(unHighlightMaterial);
+}
+
+// Highlight chair text aka change its color when it's the player's turn
+void APlayerChairSlot::HighlightChairTextColor()
+{
+	if (highlightColor == FColor::Black || !textComponent) return;
+	textComponent->SetTextRenderColor(highlightColor);
+}
+
+// Unhighlight chair text aka change its color when it's the player's turn
+void APlayerChairSlot::UnHighlightChairTextColor()
+{
+	if (unHighlightColor == FColor::Black || !textComponent) return;
+	textComponent->SetTextRenderColor(unHighlightColor);
 }

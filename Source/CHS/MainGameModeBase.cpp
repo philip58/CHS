@@ -215,7 +215,7 @@ void AMainGameModeBase::SpawnAndAddCard(UStaticMesh* cardMesh, TArray<TObjectPtr
 
 }
 
-// Spawn a card actor at a given location and return the card
+// Spawn a card actor at a given location and return the card, original with mesh
 ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVector& location)
 {
 	// If no player world or card mesh return
@@ -242,19 +242,39 @@ ACardActor* AMainGameModeBase::SpawnCardActor(UStaticMesh* cardMesh, const FVect
 	return newCard;
 }
 
-// Get random card mesh from card array
-UStaticMesh* AMainGameModeBase::GetRandomCardMesh(const TArray<TObjectPtr<ACardActor>>& deckArray)
+// Spawn a card actor at a given location and return the card, overload with cardactor
+ACardActor* AMainGameModeBase::SpawnCardActor(ACardActor* originalCard, const FVector& location)
 {
-	// Get random number between 0 to deck size 
-	float randNum = FMath::RandRange(0, deckArray.Num() - 1);
-	FMath::FloorToInt(randNum);
+	// If no player world or card mesh return
+	if (!playerWorld || !originalCard || !character)
+	{
+		return nullptr;
+	}
 
-	// Get the mesh and return it or nullptr
-	UStaticMesh* mesh; 
-	UStaticMeshComponent* meshComponent = deckArray[randNum]->cardMesh;
-	if (!meshComponent) return nullptr;
-	mesh = meshComponent->GetStaticMesh();
-	if (!mesh) return nullptr;
-	return mesh;
+	// Spawn the card
+	FActorSpawnParameters spawnParams;
+	ACardActor* newCard;
+	FTransform transform = FTransform::Identity;
+	transform.SetLocation(location);
+	spawnParams.Template = originalCard;
+	spawnParams.Owner = this;
+
+	newCard = playerWorld->SpawnActor<ACardActor>(cardActorClass, transform, spawnParams);
+
+	if (!newCard)
+	{
+		return nullptr;
+	}
+
+	return newCard;
+}
+
+// Get random card mesh from card array
+ACardActor* AMainGameModeBase::GetRandomCard(const TArray<TObjectPtr<ACardActor>>& deckArray, float randNum)
+{
+	// Get the card and return it or nullptr
+	ACardActor* randomCard = deckArray[randNum];
+	if (!randomCard) return nullptr;
+	return randomCard;
 
 }
