@@ -13,6 +13,7 @@ class APlayerChairSlot;
 class UPlayerHUD;
 class AGameStartButton;
 class ACardGameTable;
+class ADrawButton;
 
 UCLASS()
 class CHS_API AMainCharacter : public ACharacter
@@ -96,6 +97,12 @@ public:
 	// Set the card game table the player is playing at
 	void SetCardGameTable(ACardGameTable* newCardGameTable);
 
+	// Set has player drawn card
+	void SetHasPlayerDrawnCard(const bool &hasPlayerDrawn);
+
+	// Get has player drawn card
+	bool GetHasPlayerDrawnCard() const;
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
@@ -177,6 +184,9 @@ private:
 
 	// Interact with card table slot
 	void InteractWithCardTableSlot(AActor* interactedActor);
+
+	// Interact with draw card button
+	void InteractWithDrawButton(AActor* interactedActor);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
@@ -356,4 +366,10 @@ private:
 
 	// Boolean for HUD is toggled
 	bool bIsHUDToggled = true;
+
+	// Boolean if character drew a card during turn
+	bool bHasPlayerDrawnCard = false;
+
+	// Timer handle for player
+	FTimerHandle playerTimerHandle;
 };

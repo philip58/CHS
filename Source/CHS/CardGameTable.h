@@ -14,6 +14,7 @@ class APlayerChairSlot;
 class ATextRenderActor;
 class UTextRenderComponent;
 class ACardActor;
+class ADrawButton;
 
 UCLASS()
 class CHS_API ACardGameTable : public AActor
@@ -36,8 +37,14 @@ public:
 	// Main card game loop logic
 	void StartMainGameLoop(AGameStartButton* currGameStartButton);
 
+	// Spawn random card from deck
+	ACardActor* SpawnRandomCard();
+
 	// Check if the selected card can be played, returns true if it can and false if not
 	bool CanCardBePlayed(ACardActor* playedCard);
+
+	// Get card table slot 
+	ACardTableSlot* GetCardTableSlot() const;
 
 	/* --- Variables --- */
 	// Boolean for game is still running or not
@@ -75,6 +82,9 @@ private:
 
 	// Spawn the card table slot for playing a move
 	void SpawnCardTableSlot();
+
+	// Spawn draw card button
+	void SpawnDrawButton();
 
 	/* --- Variables --- */
 	// Place holder root component
@@ -268,4 +278,12 @@ private:
 	// cardSlot z location padding 
 	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")
 	float cardSlotZSpawnPadding = 5;
+
+	//  Draw button class 
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<ADrawButton> drawButtonClass;
+
+	//  Draw button 
+	UPROPERTY(EditDefaultsOnly)
+	TObjectPtr<ADrawButton> drawButton;
 };
