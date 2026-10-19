@@ -1272,6 +1272,7 @@ void AMainCharacter::InteractWithDrawButton(AActor* interactedActor)
 		newCard = cardGameTable->SpawnRandomCard();
 		if (!newCard) return;
 		this->InteractWithCard(newCard);
+		equippedCard = newCard;
 		if (cardGameTable->CanCardBePlayed(newCard)) bIsCardValid = true;
 	}
 
