@@ -14,7 +14,9 @@
 #include "Components/Button.h"
 #include "CardTableSlot.h"
 #include "GameStartButton.h"
+#include "DrawButton.h"
 #include "CardGameTable.h"
+#include "MainGameModeBase.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -288,9 +290,16 @@ void AMainCharacter::Interact()
 		InteractWithChair(hitActor);
 	}
 
+	// If the hit actor is a AGameStartButton, call the AGameStartButton interaction method
 	if (hitActor->IsA(AGameStartButton::StaticClass()))
 	{
 		InteractWithGameStartButton(hitActor);
+	}
+
+	// If the hit actor is a ADrawButton, call the ADrawButton interaction method
+	if (hitActor->IsA(ADrawButton::StaticClass()))
+	{
+		InteractWithDrawButton(hitActor);
 	}
 
 }
@@ -668,6 +677,23 @@ void AMainCharacter::HandleHovering(AActor* hoveredActor)
 		{
 			playerHUD->SetInteractPopupText("");
 		}
+		return;
+	}
+
+	// If player has not drawn and is hovering on the draw card button, change pop up text
+	if (!bHasPlayerDrawnCard && hoveredActor->IsA(ADrawButton::StaticClass()))
+	{
+		// Return if no card game table or player has already drawn a card
+		if (!cardGameTable || bHasPlayerDrawnCard) return;
+
+		// Return if not in the wait game state
+		if (cardGameTable->cardGameState != ECardGameState::GS_Wait || !bIsPlayersTurn)
+		{
+			playerHUD->SetInteractPopupText("");
+			return;
+		}
+		
+		playerHUD->SetInteractPopupText("Press E To Draw A Card");
 		return;
 	}
 
@@ -1056,6 +1082,18 @@ void AMainCharacter::SetCardGameTable(ACardGameTable* newCardGameTable)
 	if(newCardGameTable) cardGameTable = newCardGameTable;
 }
 
+// Set has player drawn card
+void AMainCharacter::SetHasPlayerDrawnCard(const bool& hasPlayerDrawn)
+{
+	bHasPlayerDrawnCard = hasPlayerDrawn;
+}
+
+// Get has player drawn card
+bool AMainCharacter::GetHasPlayerDrawnCard() const
+{
+	return bHasPlayerDrawnCard;
+}
+
 // Show the mouse cursor
 void AMainCharacter::ShowMouseCursor()
 {
@@ -1192,7 +1230,7 @@ void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 	ACardTableSlot* tempCardSlot = Cast<ACardTableSlot>(interactedActor);
 	if (!tempCardSlot) return;
 
-	if (cardGameTable->CanCardBePlayed(tempCard)) // If successfuly able to be placed aka matches the rules
+	if (cardGameTable->cardGameState == ECardGameState::GS_Wait && cardGameTable->CanCardBePlayed(tempCard)) // If successfuly able to be placed aka matches the rules
 	{
 		// Remove the card from the inventory
 		UnequipAndRemoveCard();
@@ -1211,4 +1249,48 @@ void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 		return;
 	}
 	
+}
+
+// Interact with draw card button
+void AMainCharacter::InteractWithDrawButton(AActor* interactedActor)
+{
+	// Return if no card game table, or player has drawn already
+	if (!cardGameTable || bHasPlayerDrawnCard) return;
+
+	// Return if game not in wait state and 
+	if(cardGameTable->cardGameState != ECardGameState::GS_Wait || !bIsPlayersTurn) return;
+
+	// Set game state as drawing
+	SetHasPlayerDrawnCard(true);
+	cardGameTable->cardGameState = ECardGameState::GS_Draw;
+	
+	// Draw a card with a delay until a card that can be played is 
+	ACardActor* newCard = nullptr;
+	bool bIsCardValid = false;
+	while (!bIsCardValid)
+	{
+		newCard = cardGameTable->SpawnRandomCard();
+		if (!newCard) return;
+		this->InteractWithCard(newCard);
+		equippedCard = newCard;
+		if (cardGameTable->CanCardBePlayed(newCard)) bIsCardValid = true;
+	}
+
+	// Finish the card drawing 
+	cardGameTable->cardGameState = ECardGameState::GS_Wait;
+	newCard->SetHasBeenPlayed(true);
+
+	// Remove the card from the inventory
+	UnequipAndRemoveCard();
+
+	// Remove the card from the player
+	newCard->SetIsCardEquipped(false);
+	newCard->SetOwningCharacter(nullptr);
+	newCard->UnequipCard();
+
+	// Play the card and toggle inventory
+	if(cardGameTable->GetCardTableSlot()) newCard->PlaceCardInTableSlot(cardGameTable->GetCardTableSlot());
+	ToggleCardInventory();
+	ToggleCardInventory();
+
 }
