@@ -411,12 +411,6 @@ void AMainCharacter::InteractWithCard(AActor* interactedActor)
 		return;
 	}
 
-	// Return if the card hit is the equipped card
-	if (card == equippedCard)
-	{
-		return;
-	}
-
 	// If inventory is expanded
 	if (bIsInventoryExpanded)
 	{
