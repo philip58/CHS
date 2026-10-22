@@ -274,13 +274,13 @@ void ACardGameTable::TurnTimerFinished()
 // Set player turn wait timer 
 void ACardGameTable::SetPlayerTurnTimer()
 {
-	AMainCharacter* tempMainCharacter = nullptr;
+	AMainCharacter* tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 
-	// If there was a previous turn that ran out of time, make that player draw a card
+	// If there was a previous turn that ran out of time, and player has not drawn, make that player draw a card
 	if (cardGameState == ECardGameState::GS_Done)
 	{
 		ACardActor* newCard = SpawnRandomCard();
-		if (newCard)
+		if (tempMainCharacter && newCard && !tempMainCharacter->GetHasPlayerDrawnCard())
 		{
 			tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 			
