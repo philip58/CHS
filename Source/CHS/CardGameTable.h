@@ -46,6 +46,12 @@ public:
 	// Get card table slot 
 	ACardTableSlot* GetCardTableSlot() const;
 
+	// Set the timer for the players turn
+	void SetPlayerTurnTimer();
+
+	// Handle logic for when the player ran out of time
+	void TurnTimerFinished();
+
 	/* --- Variables --- */
 	// Boolean for game is still running or not
 	bool bIsGameRunning = false;
@@ -56,6 +62,13 @@ public:
 
 	// Game state enum for tracking point in match
 	ECardGameState cardGameState = ECardGameState::GS_Idle;			
+
+	// Timer handle for game timers
+	FTimerHandle timerHandle;
+
+	// Timer text component
+	TObjectPtr<UTextRenderComponent> timerTextComponent;
+
 
 private:
 	/* --- Methods --- */
@@ -68,17 +81,11 @@ private:
 	// Resize the table for more chairs
 	void ResizeTable();
 
-	// Handle logic for when the player ran out of time
-	void TurnTimerFinished();
-
 	// Wait game state logic
 	void WaitForPlayerTurn();
 
 	// Spawn the timer table text
 	void SpawnTimerText();
-
-	// Set the timer for the players turn
-	void SetPlayerTurnTimer();
 
 	// Spawn the card table slot for playing a move
 	void SpawnCardTableSlot();
@@ -206,9 +213,6 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
 	TObjectPtr<ATextRenderActor> timerTextActor;
 
-	// Timer text component
-	TObjectPtr<UTextRenderComponent> timerTextComponent;
-
 	// Table timer text class for spawning
 	UPROPERTY(EditAnywhere, Category = "Card Game Properties/Settings")
 	TSubclassOf<ATextRenderActor> timerTextClass;
@@ -224,9 +228,6 @@ private:
 	// Number of cards to be dealt in first hand
 	UPROPERTY(EditDefaultsOnly, Category = "Card Game Properties/Settings")
 	int cardsDealtFirst = 7;
-
-	// Timer handle for game timers
-	FTimerHandle timerHandle;
 
 	// timer x location multiplier 
 	UPROPERTY(EditAnywhere, Category = "Card Table properties | Scale")

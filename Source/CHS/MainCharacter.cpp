@@ -17,6 +17,7 @@
 #include "DrawButton.h"
 #include "CardGameTable.h"
 #include "MainGameModeBase.h"
+#include "Components/TextRenderComponent.h"
 #include "DrawDebugHelpers.h"
 
 // Sets default values
@@ -1257,34 +1258,75 @@ void AMainCharacter::InteractWithDrawButton(AActor* interactedActor)
 	// Set game state as drawing
 	SetHasPlayerDrawnCard(true);
 	cardGameTable->cardGameState = ECardGameState::GS_Draw;
-	
-	// Draw a card with a delay until a card that can be played is 
+	if (cardGameTable->timerTextComponent) cardGameTable->timerTextComponent->SetText(FText::FromString("Drawing Cards..."));
+	if (cardGameTable->timerHandle.IsValid()) GetWorldTimerManager().ClearTimer(cardGameTable->timerHandle);
+
+	TArray<ACardActor> newCardArray;
 	ACardActor* newCard = nullptr;
-	bool bIsCardValid = false;
-	while (!bIsCardValid)
+
+	// Draw a card with a delay until a card that can be played is drawn
+	DrawCards();
+}
+
+// Draw random cards with a delay 
+void AMainCharacter::DrawCards()
+{
+	// Return if no card game table
+	if (!cardGameTable)
 	{
-		newCard = cardGameTable->SpawnRandomCard();
-		if (!newCard) return;
-		this->InteractWithCard(newCard);
-		equippedCard = newCard;
-		if (cardGameTable->CanCardBePlayed(newCard)) bIsCardValid = true;
+		return;
 	}
 
+	// Spawn a random card
+	ACardActor* randomCard = cardGameTable->SpawnRandomCard();
+
+	if (!IsValid(randomCard))
+	{
+		return;
+	}
+
+	// Add the card to the player's inventory
+	InteractWithCard(randomCard);
+
+	// Check whether the card can be played
+	if (!cardGameTable->CanCardBePlayed(randomCard))
+	{
+		// Draw another card after a delay
+		GetWorldTimerManager().SetTimer(
+			playerTimerHandle,
+			this,
+			&AMainCharacter::DrawCards,
+			drawIndividualCardDelay,
+			false
+		);
+
+		return;
+	}
+
+	FinishDrawingCard(randomCard);
+}
+
+// Finish drawing card, this one is to be played
+void AMainCharacter::FinishDrawingCard(ACardActor* lastCard)
+{
 	// Finish the card drawing 
 	cardGameTable->cardGameState = ECardGameState::GS_Wait;
-	newCard->SetHasBeenPlayed(true);
+	lastCard->SetHasBeenPlayed(true);
 
 	// Remove the card from the inventory
 	UnequipAndRemoveCard();
 
 	// Remove the card from the player
-	newCard->SetIsCardEquipped(false);
-	newCard->SetOwningCharacter(nullptr);
-	newCard->UnequipCard();
+	lastCard->SetIsCardEquipped(false);
+	lastCard->SetOwningCharacter(nullptr);
+	lastCard->UnequipCard();
 
 	// Play the card and toggle inventory
-	if(cardGameTable->GetCardTableSlot()) newCard->PlaceCardInTableSlot(cardGameTable->GetCardTableSlot());
+	if (cardGameTable->GetCardTableSlot()) lastCard->PlaceCardInTableSlot(cardGameTable->GetCardTableSlot());
 	ToggleCardInventory();
 	ToggleCardInventory();
 
+	cardGameTable->cardGameState = ECardGameState::GS_Done;
+	if (cardGameTable->timerHandle.IsValid()) GetWorldTimerManager().ClearTimer(cardGameTable->timerHandle);
+	cardGameTable->TurnTimerFinished();
 }

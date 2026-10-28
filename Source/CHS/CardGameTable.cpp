@@ -258,7 +258,7 @@ void ACardGameTable::TurnTimerFinished()
 {
 	// Set state, timer, chair text in accordance with the turn finished state
 	cardGameState = ECardGameState::GS_Done;
-	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Time's up!"));
+	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Turn Finished!"));
 	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->UnHighlightChairTextColor();
 
 	// Set the last player's turn boolean to false, disable drawing, then call the next turn after the timer runs out for displaying the finish turn text

@@ -114,6 +114,10 @@ public:
 	// Boolean if it is the player's turn
 	bool bIsPlayersTurn = false;
 
+	// Float for second delay between each drawn card
+	UPROPERTY(EditAnywhere)
+	float drawIndividualCardDelay = 1.0f;
+
 private:
 	/* --- Methods--- */
 	//Equip the card
@@ -187,6 +191,12 @@ private:
 
 	// Interact with draw card button
 	void InteractWithDrawButton(AActor* interactedActor);
+
+	// Draw random cards with a delay 
+	void DrawCards();
+
+	// Finish drawing card, this one is to be played
+	void FinishDrawingCard(ACardActor* lastCard);
 
 	/* --- Variables--- */
 	// Player camera (viewport)
