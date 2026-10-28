@@ -103,6 +103,9 @@ public:
 	// Get has player drawn card
 	bool GetHasPlayerDrawnCard() const;
 
+	// Set disabling card throw boolean
+	void SetDisableCardThrow(bool disableThrow);
+
 	/* --- Variables--- */ 
 	// Card placeholder socket
 	UPROPERTY(EditDefaultsOnly)
@@ -382,4 +385,10 @@ private:
 
 	// Timer handle for player
 	FTimerHandle playerTimerHandle;
+
+	// Disabling toggling card inventory
+	bool bDisableInventoryToggle = false;
+
+	// Disabling card throw
+	bool bDisableCardThrow = false;
 };

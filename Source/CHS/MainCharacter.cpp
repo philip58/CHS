@@ -958,6 +958,8 @@ void AMainCharacter::PopulateInventoryImageSlotArray(TObjectPtr<UPlayerHUD> hud)
 // Toggle the card inventory on press of tab key, expands all cards for player
 void AMainCharacter::ToggleCardInventory()
 {
+	//if (bDisableInventoryToggle) return;
+
 	if (bIsInventoryExpanded)
 	{
 		bIsInventoryExpanded = false;
@@ -1065,6 +1067,7 @@ void AMainCharacter::ToggleCardInventory()
 
 		equippedCard = nullptr;
 		EquipCard(cardsInInventory[equippedCardPos]);
+		ToggleCardHide(false);
 
 		// Hide the mouse cursor
 		//HideMouseCursor();
@@ -1087,6 +1090,12 @@ void AMainCharacter::SetHasPlayerDrawnCard(const bool& hasPlayerDrawn)
 bool AMainCharacter::GetHasPlayerDrawnCard() const
 {
 	return bHasPlayerDrawnCard;
+}
+
+// Set disabling card throw boolean
+void AMainCharacter::SetDisableCardThrow(bool disableThrow)
+{
+	bDisableCardThrow = disableThrow;
 }
 
 // Show the mouse cursor
@@ -1277,6 +1286,8 @@ void AMainCharacter::DrawCards()
 		return;
 	}
 
+	//bDisableInventoryToggle = true;
+
 	// Spawn a random card
 	ACardActor* randomCard = cardGameTable->SpawnRandomCard();
 
@@ -1329,4 +1340,6 @@ void AMainCharacter::FinishDrawingCard(ACardActor* lastCard)
 	cardGameTable->cardGameState = ECardGameState::GS_Done;
 	if (cardGameTable->timerHandle.IsValid()) GetWorldTimerManager().ClearTimer(cardGameTable->timerHandle);
 	cardGameTable->TurnTimerFinished();
+
+	//bDisableInventoryToggle = false;
 }
