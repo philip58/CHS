@@ -15,6 +15,7 @@ class ATextRenderActor;
 class UTextRenderComponent;
 class ACardActor;
 class ADrawButton;
+class AMainCharacter;
 
 UCLASS()
 class CHS_API ACardGameTable : public AActor
@@ -51,6 +52,12 @@ public:
 
 	// Handle logic for when the player ran out of time
 	void TurnTimerFinished();
+
+	// Check if game has concluded
+	bool HasGameFinished(AMainCharacter* character);
+
+	// Finish the card game
+	void FinishMainGameLoop();
 
 	/* --- Variables --- */
 	// Boolean for game is still running or not
@@ -92,6 +99,9 @@ private:
 
 	// Spawn draw card button
 	void SpawnDrawButton();
+
+	// Increment the turn to the next player
+	void IncrementPlayerID();
 
 	/* --- Variables --- */
 	// Place holder root component

@@ -314,6 +314,8 @@ void AMainCharacter::Throw()
 		return;
 	}
 
+	//if (bDisableCardThrow) return;
+
 	// Return if there is no mesh found for the currently equipped card
 	UBoxComponent* boxComp;
 	boxComp = equippedCard->cardBoxCollision;
@@ -1049,6 +1051,7 @@ void AMainCharacter::ToggleCardInventory()
 			tempForwardOffset += forwardInventoryOffset;
 		}
 
+		bDisableCardThrow = true;
 	}
 	// If bool is false, put all the cards away and equip the current card in inventory and resume character movement
 	else
@@ -1068,7 +1071,7 @@ void AMainCharacter::ToggleCardInventory()
 		equippedCard = nullptr;
 		EquipCard(cardsInInventory[equippedCardPos]);
 		ToggleCardHide(false);
-
+		bDisableCardThrow = false;
 		// Hide the mouse cursor
 		//HideMouseCursor();
 	}
@@ -1078,6 +1081,12 @@ void AMainCharacter::ToggleCardInventory()
 void AMainCharacter::SetCardGameTable(ACardGameTable* newCardGameTable)
 {
 	if(newCardGameTable) cardGameTable = newCardGameTable;
+}
+
+// Get the card game table the player is playing at
+ACardGameTable* AMainCharacter::GetCardGameTable()
+{
+	return cardGameTable;
 }
 
 // Set has player drawn card
@@ -1096,6 +1105,13 @@ bool AMainCharacter::GetHasPlayerDrawnCard() const
 void AMainCharacter::SetDisableCardThrow(bool disableThrow)
 {
 	bDisableCardThrow = disableThrow;
+}
+
+// Player wins the game 
+void AMainCharacter::GameWon()
+{
+	if (!cardGameTable) return;
+	bHasPlayerWon = true;
 }
 
 // Show the mouse cursor
@@ -1241,12 +1257,12 @@ void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 
 		// Remove the card from the player
 		tempCard->SetIsCardEquipped(false);
-		tempCard->SetOwningCharacter(nullptr);
 		tempCard->UnequipCard();
 
 		// Place the card in the table slot, cannot be picked up again
 		tempCard->SetHasBeenPlayed(true);
 		tempCard->PlaceCardInTableSlot(interactedActor);
+		tempCard->SetOwningCharacter(nullptr);
 	}
 	else // If unable to place and does not follow the rules, tell the player or just return
 	{
@@ -1258,8 +1274,8 @@ void AMainCharacter::InteractWithCardTableSlot(AActor* interactedActor)
 // Interact with draw card button
 void AMainCharacter::InteractWithDrawButton(AActor* interactedActor)
 {
-	// Return if no card game table, or player has drawn already
-	if (!cardGameTable || bHasPlayerDrawnCard) return;
+	// Return if no card game table, or player has drawn already, or not players turn
+	if (!cardGameTable || bHasPlayerDrawnCard || !bIsPlayersTurn) return;
 
 	// Return if game not in wait state and 
 	if(cardGameTable->cardGameState != ECardGameState::GS_Wait || !bIsPlayersTurn) return;

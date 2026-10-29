@@ -4,6 +4,7 @@
 #include "CardActor.h"
 #include "CardTableSlot.h"
 #include "Components/BoxComponent.h"
+#include "CardGameTable.h"
 #include "MainCharacter.h"
 
 // Sets default values
@@ -148,6 +149,21 @@ void ACardActor::PlaceCardInTableSlot(AActor* actor)
 	cardBoxCollision->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	cardBoxCollision->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
 	cardMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Ignore);
+
+	// Check if any cards remain in the owning players inventory
+	if (!owningCharacter) return;
+	if (owningCharacter->cardsInInventory.Num() == 0)
+	{
+		// If no cards remaining, call player wins logic 
+		owningCharacter->GameWon();
+		ACardGameTable* cardGameTable = owningCharacter->GetCardGameTable();
+
+		// Check if game is done and all players finished
+		if (cardGameTable && cardGameTable->HasGameFinished(owningCharacter))
+		{
+			cardGameTable->FinishMainGameLoop();
+		}
+	}
 }
 
 // Set cards new mesh
