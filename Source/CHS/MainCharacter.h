@@ -97,11 +97,20 @@ public:
 	// Set the card game table the player is playing at
 	void SetCardGameTable(ACardGameTable* newCardGameTable);
 
+	// Get the card game table the player is playing at
+	ACardGameTable* GetCardGameTable();
+
 	// Set has player drawn card
 	void SetHasPlayerDrawnCard(const bool &hasPlayerDrawn);
 
 	// Get has player drawn card
 	bool GetHasPlayerDrawnCard() const;
+
+	// Set disabling card throw boolean
+	void SetDisableCardThrow(bool disableThrow);
+
+	// Player wins the game 
+	void GameWon();
 
 	/* --- Variables--- */ 
 	// Card placeholder socket
@@ -117,6 +126,12 @@ public:
 	// Float for second delay between each drawn card
 	UPROPERTY(EditAnywhere)
 	float drawIndividualCardDelay = 1.0f;
+
+	// Array of all card the player has 
+	TArray<TObjectPtr<ACardActor>> cardsInInventory;
+
+	// Boolean for player has won the game
+	bool bHasPlayerWon = false;
 
 private:
 	/* --- Methods--- */
@@ -235,9 +250,6 @@ private:
 	
 	// Equipped card
 	ACardActor* equippedCard;
-
-	// Hash map of all card the player has and a corresponding boolean to represent if card is currently selected or not
-	TArray<TObjectPtr<ACardActor>> cardsInInventory;
 
 	// Throw velocity
 	UPROPERTY(EditDefaultsOnly, Category = "Card Properties")
@@ -382,4 +394,10 @@ private:
 
 	// Timer handle for player
 	FTimerHandle playerTimerHandle;
+
+	// Disabling toggling card inventory
+	bool bDisableInventoryToggle = false;
+
+	// Disabling card throw
+	bool bDisableCardThrow = false;
 };

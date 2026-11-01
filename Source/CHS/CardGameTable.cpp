@@ -186,7 +186,7 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 		if (!mc) continue;
 		mainGameModeBase->mainCharacterArray.Push(mc);
 		mc->SetCardGameTable(this);
-		if (!playerChairMap[i + 1]) continue;
+		if (!playerChairMap.Find(i + 1)) continue;
 
 		// For each player that is not the main character, assign them a chair for turn swapping logic
 		if (i != 0)
@@ -220,6 +220,7 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 			if (!newCard) continue;
 			tempMainCharacter = mainGameModeBase->mainCharacterArray[i];
 			tempMainCharacter->InteractWithCard(newCard);
+			tempMainCharacter->SetDisableCardThrow(true);
 		}
 	}
 
@@ -246,7 +247,7 @@ void ACardGameTable::StartMainGameLoop(AGameStartButton* currGameStartButton)
 	}
 
 	// Find first player ID and start their turn
-	int startingPlayerID = FMath::Floor(FMath::RandRange(1,numberOfChairs));
+	int startingPlayerID = FMath::Floor(FMath::RandRange(1,playerChairMap.Num()));
 	playerTurnID = startingPlayerID;
 
 	SetPlayerTurnTimer();
@@ -259,16 +260,54 @@ void ACardGameTable::TurnTimerFinished()
 	// Set state, timer, chair text in accordance with the turn finished state
 	cardGameState = ECardGameState::GS_Done;
 	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Turn Finished!"));
-	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->UnHighlightChairTextColor();
+	if (playerChairMap.Find(playerTurnID)) 
+	{ 
+		playerChairMap[playerTurnID]->UnHighlightChairTextColor(); 
+	}
+	else
+	{
+		IncrementPlayerID();
+	}
 
 	// Set the last player's turn boolean to false, disable drawing, then call the next turn after the timer runs out for displaying the finish turn text
 	AMainCharacter* tempCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 	if (tempCharacter)
 	{
 		tempCharacter->bIsPlayersTurn = false;
-		tempCharacter->SetHasPlayerDrawnCard(true);
 	}
 	GetWorldTimerManager().SetTimer(timerHandle, this, &ACardGameTable::SetPlayerTurnTimer, timesUpTimerLength, false);
+}
+
+// Check if game has concluded after the given player wins
+bool ACardGameTable::HasGameFinished(AMainCharacter* character)
+{
+	if (!character) return false;
+	AMainCharacter* tempCharacter = nullptr;
+
+	// Loop through to remove the character from the game then check if only one remains
+	for (auto iteratedChair : playerChairMap)
+	{
+		if (iteratedChair.Value) tempCharacter = iteratedChair.Value->GetCharacterInChair();
+		if (tempCharacter && tempCharacter == character) playerChairMap.FindAndRemoveChecked(iteratedChair.Key);
+		tempCharacter->SetDisableCardThrow(false);
+	}
+
+	if (playerChairMap.Num() <= 1) 
+	{
+		FinishMainGameLoop();
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+// Finish the card game
+void ACardGameTable::FinishMainGameLoop()
+{
+	if (timerTextComponent) timerTextComponent->SetText(FText::FromString("Game Over!"));
+
 }
 
 // Set player turn wait timer 
@@ -295,19 +334,17 @@ void ACardGameTable::SetPlayerTurnTimer()
 			
 		}
 
-		// Increment the turn to the next player
-		if (playerTurnID == numberOfChairs)
+		// Increment the turn to the next valid player
+		IncrementPlayerID();
+		while (!playerChairMap.Find(playerTurnID))
 		{
-			playerTurnID = 1;
+			IncrementPlayerID();
 		}
-		else
-		{
-			++playerTurnID;
-		}
+		
 	}
 
 	// Highlight current turn player text, set the player to be able to play and draw
-	if (playerChairMap[playerTurnID]) playerChairMap[playerTurnID]->HighlightChairTextColor();
+	if (playerChairMap.Find(playerTurnID)) playerChairMap[playerTurnID]->HighlightChairTextColor();
 	tempMainCharacter = playerChairMap[playerTurnID]->GetCharacterInChair();
 	if (tempMainCharacter)
 	{
@@ -389,6 +426,20 @@ void ACardGameTable::SpawnDrawButton()
 	// Spawn the button actor and rotate it correctly
 	drawButton = mainGameModeBase->playerWorld->SpawnActor<ADrawButton>(drawButtonClass, buttonNewTransform, buttonSpawnParams);
 	if (drawButton) drawButton->SetActorRelativeRotation(FRotator(0, -180, 0));
+}
+
+// Increment the turn to the next player
+void ACardGameTable::IncrementPlayerID()
+{
+
+	if (playerTurnID == numberOfChairs)
+	{
+		playerTurnID = 1;
+	}
+	else
+	{
+		++playerTurnID;
+	}
 }
 
 // Check if the selected card can be played, returns true if it can and false if not
